@@ -1,0 +1,20 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: forum-postgres
+    environment:
+      POSTGRES_DB: forum
+      POSTGRES_USER: forum
+      POSTGRES_PASSWORD: forum
+    ports:
+      - "5432:5432"
+    volumes:
+      - forum-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U forum -d forum"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  forum-pgdata:

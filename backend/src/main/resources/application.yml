@@ -1,0 +1,59 @@
+spring:
+  application:
+    name: forum
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/forum}
+    username: ${DB_USERNAME:forum}
+    password: ${DB_PASSWORD:forum}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+  data:
+    web:
+      pageable:
+        default-page-size: 20
+        max-page-size: 100
+  servlet:
+    multipart:
+      # Coherente con forum.images.max-file-size; el request permite un poco más por el overhead multipart.
+      max-file-size: 5MB
+      max-request-size: 6MB
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+
+# Reglas de negocio configurables. Los services consultan ForumPolicy; ningún rol mínimo se
+# hardcodea. Cambiar estos valores modifica el comportamiento sin tocar código.
+forum:
+  rules:
+    post-creation-min-role:
+      QUESTION: USER
+      ARTICLE: CONTRIBUTOR
+      GUIDE: CONTRIBUTOR
+    comment-order:            # SCORE o CHRONOLOGICAL
+      QUESTION: SCORE
+      ARTICLE: CHRONOLOGICAL
+      GUIDE: CHRONOLOGICAL
+    comment-min-role: USER
+    post-vote-min-role: USER
+    comment-vote-min-role: USER
+    allow-self-vote: false
+    follow-min-role: USER
+    follow-target-min-role: CONTRIBUTOR   # a quién se puede seguir
+    moderation-min-role: MODERATOR
+  images:
+    max-per-post: 10
+    max-file-size: 5MB
+    allowed-types: [image/jpeg, image/png, image/webp]
+  storage:
+    local:
+      base-path: ./data/uploads
