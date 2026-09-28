@@ -1,0 +1,50 @@
+import { useState } from 'react'
+import { ApiError } from '../api/client'
+import type { UserResponse } from '../api/types'
+import { useAuth } from '../auth/useAuth'
+import { useFollow } from '../hooks/useUsers'
+
+// Botón seguir/dejar de seguir. No se muestra en el perfil propio.
+// La UI no hardcodea follow-target-min-role: intenta seguir y maneja el 400.
+export function FollowButton({ profile }: { profile: UserResponse }) {
+  const { user, isSuspended } = useAuth()
+  const follow = useFollow(profile.id)
+  const [error, setError] = useState<string | null>(null)
+
+  // Sin sesión o es el propio perfil: no mostramos el botón.
+  if (!user || user.id === profile.id) return null
+
+  const following = profile.followedByMe === true
+
+  function handleClick() {
+    setError(null)
+    follow.mutate(!following, {
+      onError: (err) => {
+        if (err instanceof ApiError && err.status === 400) {
+          setError('Solo podés seguir a Grows (o roles superiores).')
+        } else {
+          setError(err instanceof ApiError ? err.message : 'No se pudo completar la acción.')
+        }
+      },
+    })
+  }
+
+  return (
+    <div className="flex flex-col gap-1">
+      <button
+        type="button"
+        onClick={handleClick}
+        disabled={follow.isPending || isSuspended}
+        title={isSuspended ? 'Tu cuenta está suspendida' : undefined}
+        className={`rounded-md px-4 py-1.5 text-sm font-medium transition disabled:opacity-50 ${
+          following
+            ? 'border border-gray-300 text-gray-700 hover:bg-gray-100'
+            : 'bg-green-700 text-white hover:bg-green-800'
+        }`}
+      >
+        {following ? 'Siguiendo' : 'Seguir'}
+      </button>
+      {error && <p className="text-xs text-red-700">{error}</p>}
+    </div>
+  )
+}
