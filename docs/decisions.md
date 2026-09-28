@@ -38,3 +38,10 @@
 - 2026-09-25 · Enums `Role` y `UserStatus` viven en el módulo `users` (parte del modelo de User); otros módulos dependen de `users` para usarlos · Coherente con el modelo de datos del spec; la dependencia entre módulos es de tipos/servicios, no de repositorios.
 - 2026-09-25 · Módulo `users` en un único paquete plano con la mayoría de los tipos package-private (repository, DTOs, controllers) · Cumple "lo que no necesita ser público va package-private" sin exponer internals.
 - 2026-09-25 · Errores de dominio mediante una única `ApiException` con factorías estáticas (`notFound`, `forbidden`, `conflict`, `badRequest`) traducida a `ProblemDetail` en un `@RestControllerAdvice` · Menos clases que una jerarquía de excepciones, extensible por hito.
+
+## Frontend
+
+- 2026-09-26 · Frontend (Hito 1) scaffoldeado con `create-vite` en `frontend/`: React 19, Vite 8, TypeScript 6, oxlint (no eslint) · Son las versiones que trae el scaffold moderno; el `frontend-spec.md` asumía React 18, pero se toma lo que da el generador para no quedar atrás.
+- 2026-09-26 · Tailwind CSS v4 vía plugin `@tailwindcss/vite` + `@import 'tailwindcss'` en `index.css`; sin `tailwind.config.js` ni `postcss.config.js` · v4 no los requiere por defecto; menos archivos de config.
+- 2026-09-26 · Proxy de Vite: `/api/*` → `http://localhost:8080/*` con `rewrite` que quita `/api` · El front usa rutas relativas `/api/...` y evita configurar CORS en el backend para el MVP.
+- 2026-09-26 · Cliente HTTP único (`src/api/client.ts`) con `setAuthHeaderProvider` para inyectar el header Basic desde el AuthContext (Hito 2) y `ApiError` que traduce `ProblemDetail` (status, detail, fieldErrors) · Aísla la auth (migrable a JWT tocando un solo archivo) y centraliza el manejo de errores.

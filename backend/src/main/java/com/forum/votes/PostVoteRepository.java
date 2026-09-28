@@ -24,6 +24,16 @@ interface PostVoteRepository extends JpaRepository<PostVote, Long> {
             """)
     List<Object[]> scoreRows(@Param("postIds") Collection<Long> postIds, @Param("up") VoteValue up);
 
+    @Query("""
+            select v.postId,
+                   sum(case when v.value = :up then 1 else 0 end),
+                   sum(case when v.value = :up then 0 else 1 end)
+            from PostVote v
+            where v.postId in :postIds
+            group by v.postId
+            """)
+    List<Object[]> countRows(@Param("postIds") Collection<Long> postIds, @Param("up") VoteValue up);
+
     @Query("select v.postId, v.value from PostVote v where v.userId = :userId and v.postId in :postIds")
     List<Object[]> myVoteRows(@Param("userId") Long userId, @Param("postIds") Collection<Long> postIds);
 }

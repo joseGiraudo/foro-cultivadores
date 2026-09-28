@@ -129,11 +129,11 @@ public class PostService {
 
     private PostResponse toResponse(Post post, AuthUser principal) {
         List<Long> ids = List.of(post.getId());
-        int score = postVoteStats.scoresByPost(ids).getOrDefault(post.getId(), 0);
+        VoteCount votes = postVoteStats.voteCountsByPost(ids).getOrDefault(post.getId(), VoteCount.ZERO);
         long commentCount = postCommentStats.commentCountsByPost(ids).getOrDefault(post.getId(), 0L);
         VoteValue myVote = principal == null ? null
                 : postVoteStats.myVotesByPost(ids, principal.getId()).get(post.getId());
-        return PostResponse.of(post, score, commentCount, myVote, postImages.imagesForPost(post.getId()));
+        return PostResponse.of(post, votes, commentCount, myVote, postImages.imagesForPost(post.getId()));
     }
 
     private void requireCreationRole(AuthUser principal, PostType type) {

@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.forum.posts.PostVoteStats;
+import com.forum.posts.VoteCount;
 import com.forum.shared.VoteValue;
 
 @Component
@@ -31,6 +32,19 @@ class PostVoteStatsImpl implements PostVoteStats {
             scores.put((Long) row[0], ((Long) row[1]).intValue());
         }
         return scores;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Map<Long, VoteCount> voteCountsByPost(Collection<Long> postIds) {
+        if (postIds.isEmpty()) {
+            return Map.of();
+        }
+        Map<Long, VoteCount> counts = new LinkedHashMap<>();
+        for (Object[] row : postVoteRepository.countRows(postIds, VoteValue.UPVOTE)) {
+            counts.put((Long) row[0], new VoteCount(((Long) row[1]).intValue(), ((Long) row[2]).intValue()));
+        }
+        return counts;
     }
 
     @Override

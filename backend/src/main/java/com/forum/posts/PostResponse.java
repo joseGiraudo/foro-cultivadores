@@ -21,13 +21,15 @@ public record PostResponse(
         List<CategoryView> categories,
         List<ImageResponse> images,
         int score,
+        int upvotes,
+        int downvotes,
         long commentCount,
         VoteValue myVote,
         Instant createdAt,
         Instant updatedAt
 ) {
 
-    static PostResponse of(Post post, int score, long commentCount, VoteValue myVote, List<ImageResponse> images) {
+    static PostResponse of(Post post, VoteCount votes, long commentCount, VoteValue myVote, List<ImageResponse> images) {
         return new PostResponse(
                 post.getId(),
                 post.getTitle(),
@@ -37,7 +39,9 @@ public record PostResponse(
                 AuthorResponse.of(post.getAuthor()),
                 PostMappings.categoryViews(post),
                 images,
-                score,
+                votes.score(),
+                votes.upvotes(),
+                votes.downvotes(),
                 commentCount,
                 myVote,
                 post.getCreatedAt(),

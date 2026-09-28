@@ -15,6 +15,9 @@ public interface PostVoteStats {
     /** score (upvotes − downvotes) por post; los posts sin votos no aparecen (se asume 0). */
     Map<Long, Integer> scoresByPost(Collection<Long> postIds);
 
+    /** upvotes y downvotes por post; los posts sin votos no aparecen (se asume 0/0). */
+    Map<Long, VoteCount> voteCountsByPost(Collection<Long> postIds);
+
     /** Voto del usuario dado por post; solo incluye los posts donde votó. Vacío si userId es null. */
     Map<Long, VoteValue> myVotesByPost(Collection<Long> postIds, Long userId);
 }
