@@ -14,6 +14,7 @@ import { PlaceholderPage } from './pages/PlaceholderPage'
 import { PostDetailPage } from './pages/PostDetailPage'
 import { ProfilePage } from './pages/ProfilePage'
 import { RegisterPage } from './pages/RegisterPage'
+import { SavedPostsPage } from './pages/SavedPostsPage'
 
 // Layout base + rutas. Las rutas placeholder se van completando por hito (ver docs/frontend-spec.md §6).
 export default function App() {
@@ -51,6 +52,14 @@ export default function App() {
             element={
               <RequireAuth>
                 <MePage />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/saved"
+            element={
+              <RequireAuth>
+                <SavedPostsPage />
               </RequireAuth>
             }
           />

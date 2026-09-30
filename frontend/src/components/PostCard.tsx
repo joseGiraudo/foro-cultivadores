@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import type { PostSummaryResponse } from '../api/types'
 import { formatDate, resolveImageUrl } from '../lib/format'
+import { EditedBadge } from './EditedBadge'
 import { PostTypeBadge } from './PostTypeBadge'
 import { RoleBadge } from './RoleBadge'
 import { StatusBadge } from './StatusBadge'
@@ -39,6 +40,7 @@ export function PostCard({ post }: { post: PostSummaryResponse }) {
           <span>▲ {post.score}</span>
           <span>💬 {post.commentCount}</span>
           <span>{formatDate(post.createdAt)}</span>
+          <EditedBadge editedAt={post.editedAt} />
         </div>
       </div>
     </Link>

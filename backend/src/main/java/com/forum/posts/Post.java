@@ -65,6 +65,14 @@ public class Post {
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 
+    /** Última edición de contenido. Null mientras no se haya editado (los cambios de estado no cuentan). */
+    @Column(name = "edited_at")
+    private Instant editedAt;
+
+    /** Comentario fijado por el autor (uno o ninguno). Null si no hay ninguno fijado. */
+    @Column(name = "pinned_comment_id")
+    private Long pinnedCommentId;
+
     protected Post() {
         // requerido por JPA
     }
@@ -117,6 +125,22 @@ public class Post {
         return updatedAt;
     }
 
+    public Instant getEditedAt() {
+        return editedAt;
+    }
+
+    public Long getPinnedCommentId() {
+        return pinnedCommentId;
+    }
+
+    public void pinComment(Long commentId) {
+        this.pinnedCommentId = commentId;
+    }
+
+    public void unpinComment() {
+        this.pinnedCommentId = null;
+    }
+
     public void edit(String newTitle, String newContent, Set<Category> newCategories) {
         if (newTitle != null) {
             this.title = newTitle;
@@ -127,7 +151,9 @@ public class Post {
         if (newCategories != null) {
             this.categories = new LinkedHashSet<>(newCategories);
         }
-        this.updatedAt = Instant.now();
+        Instant now = Instant.now();
+        this.updatedAt = now;
+        this.editedAt = now;
     }
 
     public void changeStatus(ContentStatus newStatus) {

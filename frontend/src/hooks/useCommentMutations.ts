@@ -1,5 +1,11 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { changeCommentStatus, createComment, updateComment } from '../api/comments'
+import {
+  changeCommentStatus,
+  createComment,
+  pinComment,
+  unpinComment,
+  updateComment,
+} from '../api/comments'
 
 // Al crear/editar comentarios se invalida la lista y también el post
 // (el detalle muestra commentCount, que cambia al comentar).
@@ -36,6 +42,16 @@ export function useChangeCommentStatus(postId: number) {
   return useMutation({
     mutationFn: ({ commentId, status }: { commentId: number; status: string }) =>
       changeCommentStatus(commentId, status),
+    onSuccess: invalidate,
+  })
+}
+
+// Fijar/desfijar un comentario como principal del post. Solo el autor del post.
+export function usePinComment(postId: number) {
+  const invalidate = useCommentInvalidation(postId)
+  return useMutation({
+    mutationFn: ({ commentId, next }: { commentId: number; next: boolean }) =>
+      next ? pinComment(commentId) : unpinComment(commentId),
     onSuccess: invalidate,
   })
 }

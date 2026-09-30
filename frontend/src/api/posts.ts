@@ -49,3 +49,18 @@ export function updatePost(id: number, body: UpdatePostBody): Promise<PostRespon
 export function changePostStatus(id: number, status: string): Promise<PostResponse> {
   return api.patch<PostResponse>(`/posts/${id}/status`, { status })
 }
+
+// POST /posts/{id}/save → guarda el post (204). Idempotente.
+export function savePost(id: number): Promise<void> {
+  return api.post<void>(`/posts/${id}/save`)
+}
+
+// DELETE /posts/{id}/save → quita el post de guardados (204). Idempotente.
+export function unsavePost(id: number): Promise<void> {
+  return api.delete<void>(`/posts/${id}/save`)
+}
+
+// GET /me/saved-posts → página de posts guardados por el usuario, del más reciente al más viejo.
+export function listSavedPosts(page = 0): Promise<Page<PostSummaryResponse>> {
+  return api.get<Page<PostSummaryResponse>>('/me/saved-posts', { page })
+}

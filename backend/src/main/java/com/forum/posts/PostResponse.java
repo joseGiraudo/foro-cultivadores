@@ -25,11 +25,14 @@ public record PostResponse(
         int downvotes,
         long commentCount,
         VoteValue myVote,
+        boolean saved,
         Instant createdAt,
-        Instant updatedAt
+        Instant updatedAt,
+        Instant editedAt
 ) {
 
-    static PostResponse of(Post post, VoteCount votes, long commentCount, VoteValue myVote, List<ImageResponse> images) {
+    static PostResponse of(Post post, VoteCount votes, long commentCount, VoteValue myVote, List<ImageResponse> images,
+                           boolean saved) {
         return new PostResponse(
                 post.getId(),
                 post.getTitle(),
@@ -44,7 +47,9 @@ public record PostResponse(
                 votes.downvotes(),
                 commentCount,
                 myVote,
+                saved,
                 post.getCreatedAt(),
-                post.getUpdatedAt());
+                post.getUpdatedAt(),
+                post.getEditedAt());
     }
 }

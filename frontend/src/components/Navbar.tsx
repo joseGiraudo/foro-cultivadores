@@ -35,6 +35,9 @@ export function Navbar() {
               <NavLink to="/posts/new" className={linkClass}>
                 Publicar
               </NavLink>
+              <NavLink to="/saved" className={linkClass}>
+                Guardados
+              </NavLink>
               {isAtLeast(user.role, 'MODERATOR') && (
                 <NavLink to="/moderation" className={linkClass}>
                   Moderación

@@ -1,10 +1,13 @@
 package com.forum.posts;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
@@ -32,10 +35,11 @@ public class PostService {
     private final PostVoteStats postVoteStats;
     private final PostCommentStats postCommentStats;
     private final PostImages postImages;
+    private final PostSaveStats postSaveStats;
 
     PostService(PostRepository postRepository, CategoryService categoryService, UserService userService,
                 ForumPolicy policy, PostVoteStats postVoteStats, PostCommentStats postCommentStats,
-                PostImages postImages) {
+                PostImages postImages, PostSaveStats postSaveStats) {
         this.postRepository = postRepository;
         this.categoryService = categoryService;
         this.userService = userService;
@@ -43,6 +47,7 @@ public class PostService {
         this.postVoteStats = postVoteStats;
         this.postCommentStats = postCommentStats;
         this.postImages = postImages;
+        this.postSaveStats = postSaveStats;
     }
 
     @Transactional
@@ -69,17 +74,49 @@ public class PostService {
         Specification<Post> spec = PostSpecifications.filter(categoryId, authorId, postType, effectiveStatus);
         Page<Post> page = postRepository.findAll(spec, pageable);
 
-        List<Long> ids = page.getContent().stream().map(Post::getId).toList();
+        return new PageImpl<>(toSummaries(page.getContent(), principal), pageable, page.getTotalElements());
+    }
+
+    /**
+     * Arma resúmenes para una lista de ids preservando su orden (los no visibles se descartan).
+     * Pensado para otros módulos que ya tienen un orden propio (ej: posts guardados).
+     */
+    @Transactional(readOnly = true)
+    public List<PostSummaryResponse> summariesForIds(List<Long> ids, AuthUser principal) {
+        if (ids.isEmpty()) {
+            return List.of();
+        }
+        boolean moderator = isModerator(principal);
+        Map<Long, Post> byId = new HashMap<>();
+        for (Post post : postRepository.findAllById(ids)) {
+            if (post.getStatus() == ContentStatus.ACTIVE || moderator) {
+                byId.put(post.getId(), post);
+            }
+        }
+        List<Post> ordered = new ArrayList<>();
+        for (Long id : ids) {
+            Post post = byId.get(id);
+            if (post != null) {
+                ordered.add(post);
+            }
+        }
+        return toSummaries(ordered, principal);
+    }
+
+    private List<PostSummaryResponse> toSummaries(List<Post> posts, AuthUser principal) {
+        List<Long> ids = posts.stream().map(Post::getId).toList();
         Map<Long, Integer> scores = postVoteStats.scoresByPost(ids);
         Map<Long, Long> counts = postCommentStats.commentCountsByPost(ids);
         Map<Long, VoteValue> myVotes = principal == null ? Map.of() : postVoteStats.myVotesByPost(ids, principal.getId());
         Map<Long, String> thumbnails = postImages.thumbnailUrlByPost(ids);
+        Set<Long> saved = principal == null ? Set.of() : postSaveStats.savedPostIds(ids, principal.getId());
 
-        return page.map(post -> PostSummaryResponse.of(post,
+        return posts.stream().map(post -> PostSummaryResponse.of(post,
                 scores.getOrDefault(post.getId(), 0),
                 counts.getOrDefault(post.getId(), 0L),
                 myVotes.get(post.getId()),
-                thumbnails.get(post.getId())));
+                thumbnails.get(post.getId()),
+                saved.contains(post.getId()))).toList();
     }
 
     @Transactional
@@ -133,7 +170,8 @@ public class PostService {
         long commentCount = postCommentStats.commentCountsByPost(ids).getOrDefault(post.getId(), 0L);
         VoteValue myVote = principal == null ? null
                 : postVoteStats.myVotesByPost(ids, principal.getId()).get(post.getId());
-        return PostResponse.of(post, votes, commentCount, myVote, postImages.imagesForPost(post.getId()));
+        boolean saved = principal != null && postSaveStats.savedPostIds(ids, principal.getId()).contains(post.getId());
+        return PostResponse.of(post, votes, commentCount, myVote, postImages.imagesForPost(post.getId()), saved);
     }
 
     private void requireCreationRole(AuthUser principal, PostType type) {

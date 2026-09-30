@@ -19,7 +19,9 @@ public record CommentResponse(
         int depth,
         int score,
         VoteValue myVote,
+        boolean pinned,
         Instant createdAt,
-        Instant updatedAt
+        Instant updatedAt,
+        Instant editedAt
 ) {
 }

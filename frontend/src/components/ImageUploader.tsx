@@ -1,7 +1,7 @@
 import { useRef, useState, type ChangeEvent } from 'react'
 import { ApiError } from '../api/client'
 import type { ImageResponse } from '../api/types'
-import { useDeleteImage, useUploadImage } from '../hooks/usePostMutations'
+import { useDeleteImage, useUploadImages } from '../hooks/usePostMutations'
 import { resolveImageUrl } from '../lib/format'
 
 // Límites espejo del backend (forum.images). El backend valida por contenido real igual;
@@ -29,28 +29,53 @@ function humanErrorFromApi(error: unknown): string {
 }
 
 export function ImageUploader({ postId, images, onInsertReference }: ImageUploaderProps) {
-  const upload = useUploadImage(postId)
+  const upload = useUploadImages(postId)
   const remove = useDeleteImage(postId)
   const inputRef = useRef<HTMLInputElement>(null)
   const [error, setError] = useState<string | null>(null)
 
-  const atLimit = images.length >= MAX_PER_POST
+  const remaining = MAX_PER_POST - images.length
+  const atLimit = remaining <= 0
 
   function handleSelect(event: ChangeEvent<HTMLInputElement>) {
-    const file = event.target.files?.[0]
-    if (inputRef.current) inputRef.current.value = '' // permitir re-subir el mismo archivo
-    if (!file) return
+    const files = Array.from(event.target.files ?? [])
+    if (inputRef.current) inputRef.current.value = '' // permitir re-seleccionar los mismos archivos
+    if (files.length === 0) return
 
     setError(null)
-    if (!ALLOWED_TYPES.includes(file.type)) {
-      setError('Tipo de archivo no permitido (usá JPEG, PNG o WebP).')
+    if (files.length > remaining) {
+      setError(
+        `Seleccionaste ${files.length} imágenes pero solo podés subir ${remaining} más ` +
+          `(máximo ${MAX_PER_POST} por publicación).`,
+      )
       return
     }
-    if (file.size > MAX_FILE_SIZE) {
-      setError('El archivo supera el tamaño máximo (5 MB).')
-      return
+
+    // Validación rápida por archivo (el backend igual valida por contenido real).
+    for (const file of files) {
+      if (!ALLOWED_TYPES.includes(file.type)) {
+        setError(`"${file.name}": tipo no permitido (usá JPEG, PNG o WebP).`)
+        return
+      }
+      if (file.size > MAX_FILE_SIZE) {
+        setError(`"${file.name}": supera el tamaño máximo (5 MB).`)
+        return
+      }
     }
-    upload.mutate(file, { onError: (err) => setError(humanErrorFromApi(err)) })
+
+    upload.mutate(files, {
+      onSuccess: (result) => {
+        if (result.failed > 0) {
+          const detail = humanErrorFromApi(result.firstError)
+          setError(
+            result.uploaded > 0
+              ? `Se subieron ${result.uploaded} de ${files.length}. ${detail}`
+              : detail,
+          )
+        }
+      },
+      onError: (err) => setError(humanErrorFromApi(err)),
+    })
   }
 
   return (
@@ -60,6 +85,7 @@ export function ImageUploader({ postId, images, onInsertReference }: ImageUpload
           ref={inputRef}
           type="file"
           accept={ALLOWED_TYPES.join(',')}
+          multiple
           onChange={handleSelect}
           disabled={atLimit || upload.isPending}
           className="text-sm"
@@ -67,7 +93,8 @@ export function ImageUploader({ postId, images, onInsertReference }: ImageUpload
         {upload.isPending && <span className="text-sm text-gray-500">Subiendo…</span>}
       </div>
       <p className="mb-2 text-xs text-gray-500">
-        {images.length}/{MAX_PER_POST} imágenes · JPEG, PNG o WebP · hasta 5 MB.
+        {images.length}/{MAX_PER_POST} imágenes · podés elegir varias a la vez · JPEG, PNG o WebP ·
+        hasta 5 MB cada una.
       </p>
       {error && <p className="mb-2 text-sm text-red-700">{error}</p>}
 

@@ -51,6 +51,10 @@ public class Comment {
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 
+    /** Última edición de contenido. Null mientras no se haya editado (los cambios de estado no cuentan). */
+    @Column(name = "edited_at")
+    private Instant editedAt;
+
     protected Comment() {
         // requerido por JPA
     }
@@ -98,9 +102,15 @@ public class Comment {
         return updatedAt;
     }
 
+    public Instant getEditedAt() {
+        return editedAt;
+    }
+
     public void editContent(String newContent) {
         this.content = newContent;
-        this.updatedAt = Instant.now();
+        Instant now = Instant.now();
+        this.updatedAt = now;
+        this.editedAt = now;
     }
 
     public void changeStatus(ContentStatus newStatus) {

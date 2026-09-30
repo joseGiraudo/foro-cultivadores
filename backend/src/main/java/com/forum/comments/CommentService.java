@@ -67,7 +67,7 @@ public class CommentService {
                 : commentVoteStats.myVotesByComment(ids, principal.getId());
 
         CommentOrder order = policy.commentOrder(post.getPostType());
-        return buildThread(all, order, scores, myVotes, isModerator(principal));
+        return buildThread(all, order, scores, myVotes, isModerator(principal), post.getPinnedCommentId());
     }
 
     @Transactional
@@ -95,7 +95,47 @@ public class CommentService {
         }
         ContentStatusTransitions.validate(comment.getStatus(), target, author, moderator);
         comment.changeStatus(target);
+        // Un comentario fijado que deja de estar activo (oculto/eliminado) se desfija solo.
+        if (target != ContentStatus.ACTIVE) {
+            Post post = comment.getPost();
+            if (comment.getId().equals(post.getPinnedCommentId())) {
+                post.unpinComment();
+            }
+        }
         return single(comment, principal);
+    }
+
+    /** Fija un comentario de primer nivel como principal del post. Solo el autor del post. */
+    @Transactional
+    public CommentResponse pin(Long commentId, AuthUser principal) {
+        principal.ensureCanWrite();
+        Comment comment = load(commentId);
+        Post post = comment.getPost();
+        if (!isPostAuthor(post, principal)) {
+            throw ApiException.forbidden("Solo el autor del post puede fijar un comentario");
+        }
+        if (comment.getParentComment() != null) {
+            throw ApiException.badRequest("Solo se puede fijar un comentario de primer nivel");
+        }
+        if (comment.getStatus() != ContentStatus.ACTIVE) {
+            throw ApiException.conflict("Solo se puede fijar un comentario activo");
+        }
+        post.pinComment(comment.getId());
+        return single(comment, principal);
+    }
+
+    /** Desfija el comentario si es el que está fijado en su post. Solo el autor del post. Idempotente. */
+    @Transactional
+    public void unpin(Long commentId, AuthUser principal) {
+        principal.ensureCanWrite();
+        Comment comment = load(commentId);
+        Post post = comment.getPost();
+        if (!isPostAuthor(post, principal)) {
+            throw ApiException.forbidden("Solo el autor del post puede desfijar un comentario");
+        }
+        if (comment.getId().equals(post.getPinnedCommentId())) {
+            post.unpinComment();
+        }
     }
 
     /**
@@ -116,7 +156,7 @@ public class CommentService {
         Map<Long, Integer> scores = commentVoteStats.scoresByComment(ids);
         Map<Long, VoteValue> myVotes = principal == null ? Map.of()
                 : commentVoteStats.myVotesByComment(ids, principal.getId());
-        return toResponse(comment, 0, scores, myVotes, isModerator(principal));
+        return toResponse(comment, 0, scores, myVotes, isModerator(principal), comment.getPost().getPinnedCommentId());
     }
 
     private Comment resolveParent(Long parentCommentId, Long postId) {
@@ -142,7 +182,7 @@ public class CommentService {
     // --- Armado del hilo: lista plana en recorrido en profundidad ---
 
     private List<CommentResponse> buildThread(List<Comment> all, CommentOrder order, Map<Long, Integer> scores,
-                                              Map<Long, VoteValue> myVotes, boolean isModerator) {
+                                              Map<Long, VoteValue> myVotes, boolean isModerator, Long pinnedCommentId) {
         Map<Long, List<Comment>> childrenByParent = new HashMap<>();
         List<Comment> roots = new ArrayList<>();
         for (Comment c : all) {
@@ -156,10 +196,14 @@ public class CommentService {
 
         Comparator<Comment> chronological =
                 Comparator.comparing(Comment::getCreatedAt).thenComparing(Comment::getId);
-        Comparator<Comment> rootComparator = order == CommentOrder.SCORE
+        Comparator<Comment> baseOrder = order == CommentOrder.SCORE
                 ? Comparator.comparingInt((Comment c) -> scores.getOrDefault(c.getId(), 0)).reversed()
                         .thenComparing(Comment::getCreatedAt).thenComparing(Comment::getId)
                 : chronological;
+        // El comentario fijado siempre va primero; el resto respeta el orden del tipo de post.
+        Comparator<Comment> rootComparator =
+                Comparator.comparingInt((Comment c) -> c.getId().equals(pinnedCommentId) ? 0 : 1)
+                        .thenComparing(baseOrder);
 
         roots.sort(rootComparator);
         // Las respuestas (cualquier nivel debajo del primero) siempre van por createdAt ascendente.
@@ -167,22 +211,22 @@ public class CommentService {
 
         List<CommentResponse> flattened = new ArrayList<>();
         for (Comment root : roots) {
-            appendDepthFirst(root, 0, childrenByParent, scores, myVotes, isModerator, flattened);
+            appendDepthFirst(root, 0, childrenByParent, scores, myVotes, isModerator, pinnedCommentId, flattened);
         }
         return flattened;
     }
 
     private void appendDepthFirst(Comment comment, int depth, Map<Long, List<Comment>> childrenByParent,
                                   Map<Long, Integer> scores, Map<Long, VoteValue> myVotes,
-                                  boolean isModerator, List<CommentResponse> out) {
-        out.add(toResponse(comment, depth, scores, myVotes, isModerator));
+                                  boolean isModerator, Long pinnedCommentId, List<CommentResponse> out) {
+        out.add(toResponse(comment, depth, scores, myVotes, isModerator, pinnedCommentId));
         for (Comment child : childrenByParent.getOrDefault(comment.getId(), List.of())) {
-            appendDepthFirst(child, depth + 1, childrenByParent, scores, myVotes, isModerator, out);
+            appendDepthFirst(child, depth + 1, childrenByParent, scores, myVotes, isModerator, pinnedCommentId, out);
         }
     }
 
     private CommentResponse toResponse(Comment comment, int depth, Map<Long, Integer> scores,
-                                       Map<Long, VoteValue> myVotes, boolean isModerator) {
+                                       Map<Long, VoteValue> myVotes, boolean isModerator, Long pinnedCommentId) {
         boolean showContent = comment.getStatus() == ContentStatus.ACTIVE || isModerator;
         return new CommentResponse(
                 comment.getId(),
@@ -193,8 +237,10 @@ public class CommentService {
                 depth,
                 scores.getOrDefault(comment.getId(), 0),
                 myVotes.get(comment.getId()),
+                comment.getId().equals(pinnedCommentId),
                 comment.getCreatedAt(),
-                comment.getUpdatedAt());
+                comment.getUpdatedAt(),
+                comment.getEditedAt());
     }
 
     private Long parentId(Comment comment) {
@@ -207,5 +253,9 @@ public class CommentService {
 
     private boolean isAuthor(Comment comment, AuthUser principal) {
         return principal != null && comment.getAuthor().getId().equals(principal.getId());
+    }
+
+    private boolean isPostAuthor(Post post, AuthUser principal) {
+        return principal != null && post.getAuthor().getId().equals(principal.getId());
     }
 }

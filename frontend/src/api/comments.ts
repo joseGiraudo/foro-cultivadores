@@ -27,3 +27,13 @@ export function updateComment(commentId: number, content: string): Promise<Comme
 export function changeCommentStatus(commentId: number, status: string): Promise<CommentResponse> {
   return api.patch<CommentResponse>(`/comments/${commentId}/status`, { status })
 }
+
+// POST /comments/{id}/pin → fija el comentario como principal del post. Solo el autor del post.
+export function pinComment(commentId: number): Promise<CommentResponse> {
+  return api.post<CommentResponse>(`/comments/${commentId}/pin`)
+}
+
+// DELETE /comments/{id}/pin → desfija el comentario (204). Solo el autor del post. Idempotente.
+export function unpinComment(commentId: number): Promise<void> {
+  return api.delete<void>(`/comments/${commentId}/pin`)
+}

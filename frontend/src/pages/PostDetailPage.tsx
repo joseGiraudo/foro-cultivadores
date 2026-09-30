@@ -1,12 +1,14 @@
 import { Link, useParams } from 'react-router-dom'
 import { CommentForm } from '../components/CommentForm'
 import { CommentTree } from '../components/CommentTree'
+import { EditedBadge } from '../components/EditedBadge'
 import { MarkdownContent } from '../components/MarkdownContent'
 import { PostGallery } from '../components/PostGallery'
 import { PostModerationActions } from '../components/PostModerationActions'
 import { PostTypeBadge } from '../components/PostTypeBadge'
 import { PostVoteControl } from '../components/PostVoteControl'
 import { RoleBadge } from '../components/RoleBadge'
+import { SaveButton } from '../components/SaveButton'
 import { StatusBadge } from '../components/StatusBadge'
 import { ErrorState, Loading } from '../components/states'
 import { useAuth } from '../auth/useAuth'
@@ -46,14 +48,17 @@ export function PostDetailPage() {
 
       <div className="mb-2 mt-2 flex items-start justify-between gap-3">
         <h1 className="text-2xl font-bold text-gray-900">{post.title}</h1>
-        {user?.id === post.author.id && post.status === 'ACTIVE' && (
-          <Link
-            to={`/posts/${post.id}/edit`}
-            className="shrink-0 rounded-md border border-gray-300 px-3 py-1 text-sm font-medium text-gray-700 hover:bg-gray-100"
-          >
-            Editar
-          </Link>
-        )}
+        <div className="flex shrink-0 items-center gap-2">
+          {post.status === 'ACTIVE' && <SaveButton post={post} />}
+          {user?.id === post.author.id && post.status === 'ACTIVE' && (
+            <Link
+              to={`/posts/${post.id}/edit`}
+              className="rounded-md border border-gray-300 px-3 py-1 text-sm font-medium text-gray-700 hover:bg-gray-100"
+            >
+              Editar
+            </Link>
+          )}
+        </div>
       </div>
 
       <div className="mb-4 flex flex-wrap items-center gap-3 text-sm text-gray-500">
@@ -64,6 +69,7 @@ export function PostDetailPage() {
         <PostVoteControl post={post} />
         <span>💬 {post.commentCount}</span>
         <span>{formatDate(post.createdAt)}</span>
+        <EditedBadge editedAt={post.editedAt} />
       </div>
 
       <div className="mb-4">
@@ -109,6 +115,7 @@ export function PostDetailPage() {
           <CommentTree
             comments={comments ?? []}
             postId={postId}
+            postAuthorId={post.author.id}
             canComment={!!user && !isSuspended && post.status === 'ACTIVE'}
           />
         )}

@@ -11,7 +11,7 @@ import com.forum.shared.VoteValue;
  * Resumen de un post para listados: sin contenido completo (solo un extracto) y sin imágenes,
  * pero con la url de la miniatura (imagen de menor position, null si no tiene).
  */
-record PostSummaryResponse(
+public record PostSummaryResponse(
         Long id,
         String title,
         String excerpt,
@@ -23,11 +23,14 @@ record PostSummaryResponse(
         int score,
         long commentCount,
         VoteValue myVote,
+        boolean saved,
         Instant createdAt,
-        Instant updatedAt
+        Instant updatedAt,
+        Instant editedAt
 ) {
 
-    static PostSummaryResponse of(Post post, int score, long commentCount, VoteValue myVote, String thumbnailUrl) {
+    static PostSummaryResponse of(Post post, int score, long commentCount, VoteValue myVote, String thumbnailUrl,
+                                  boolean saved) {
         return new PostSummaryResponse(
                 post.getId(),
                 post.getTitle(),
@@ -40,7 +43,9 @@ record PostSummaryResponse(
                 score,
                 commentCount,
                 myVote,
+                saved,
                 post.getCreatedAt(),
-                post.getUpdatedAt());
+                post.getUpdatedAt(),
+                post.getEditedAt());
     }
 }

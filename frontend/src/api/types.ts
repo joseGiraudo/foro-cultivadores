@@ -77,8 +77,12 @@ export interface PostSummaryResponse {
   score: number
   commentCount: number
   myVote: VoteValue | null
+  // Si el usuario actual guardó el post (false si es anónimo).
+  saved: boolean
   createdAt: string
   updatedAt: string
+  // Última edición de contenido; null si nunca se editó (los cambios de estado no cuentan).
+  editedAt: string | null
 }
 
 // Detalle de post: incluye `content` (Markdown crudo) e `images` ordenadas por position.
@@ -97,8 +101,12 @@ export interface PostResponse {
   downvotes: number
   commentCount: number
   myVote: VoteValue | null
+  // Si el usuario actual guardó el post (false si es anónimo).
+  saved: boolean
   createdAt: string
   updatedAt: string
+  // Última edición de contenido; null si nunca se editó (los cambios de estado no cuentan).
+  editedAt: string | null
 }
 
 // Autor embebido en comentarios (sin rol).
@@ -119,8 +127,12 @@ export interface CommentResponse {
   depth: number
   score: number
   myVote: VoteValue | null
+  // Si es el comentario fijado por el autor del post (uno por post). Los fijados van primero en la lista.
+  pinned: boolean
   createdAt: string
   updatedAt: string
+  // Última edición de contenido; null si nunca se editó (los cambios de estado no cuentan).
+  editedAt: string | null
 }
 
 // Perfil de usuario. `email` solo viene en /users/me y en endpoints de admin (null en perfil público).

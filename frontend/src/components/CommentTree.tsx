@@ -4,6 +4,7 @@ import { useAuth } from '../auth/useAuth'
 import {
   useChangeCommentStatus,
   useCreateComment,
+  usePinComment,
   useUpdateComment,
 } from '../hooks/useCommentMutations'
 import { useCommentVote } from '../hooks/useVote'
@@ -11,6 +12,7 @@ import { formatDate } from '../lib/format'
 import { moderationTargets } from '../lib/moderation'
 import { isAtLeast } from '../lib/roles'
 import { CommentForm } from './CommentForm'
+import { EditedBadge } from './EditedBadge'
 import { StatusBadge } from './StatusBadge'
 import { VoteControl } from './VoteControl'
 
@@ -21,16 +23,19 @@ const MAX_INDENT = 6
 interface CommentItemProps {
   comment: CommentResponse
   postId: number
+  // Id del autor del post: solo él puede fijar/desfijar comentarios.
+  postAuthorId: number
   // Si el usuario puede comentar/responder (sesión activa, no suspendido, post ACTIVE).
   canComment: boolean
 }
 
-function CommentItem({ comment, postId, canComment }: CommentItemProps) {
+function CommentItem({ comment, postId, postAuthorId, canComment }: CommentItemProps) {
   const { user, isSuspended } = useAuth()
   const vote = useCommentVote(postId, comment.id)
   const createReply = useCreateComment(postId)
   const updateComment = useUpdateComment(postId)
   const changeStatus = useChangeCommentStatus(postId)
+  const pin = usePinComment(postId)
 
   const [replying, setReplying] = useState(false)
   const [editing, setEditing] = useState(false)
@@ -50,6 +55,9 @@ function CommentItem({ comment, postId, canComment }: CommentItemProps) {
 
   const canEdit = isOwn && comment.status === 'ACTIVE' && !isSuspended
   const canDelete = isOwn && comment.status === 'ACTIVE' && !isSuspended
+  // Solo el autor del post puede fijar, y solo comentarios de primer nivel activos.
+  const isPostAuthor = user?.id === postAuthorId
+  const canPin = isPostAuthor && comment.depth === 0 && comment.status === 'ACTIVE' && !isSuspended
   const isModerator = isAtLeast(user?.role, 'MODERATOR')
   const modTargets = isModerator ? moderationTargets(comment.status) : []
 
@@ -70,7 +78,9 @@ function CommentItem({ comment, postId, canComment }: CommentItemProps) {
 
   return (
     <div
-      className="border-l border-gray-200 py-2 pl-3"
+      className={`border-l py-2 pl-3 ${
+        comment.pinned ? 'border-green-500 bg-green-50/60' : 'border-gray-200'
+      }`}
       style={{ marginLeft: `${indent * 1.25}rem` }}
     >
       {hidden ? (
@@ -80,8 +90,14 @@ function CommentItem({ comment, postId, canComment }: CommentItemProps) {
       ) : (
         <>
           <div className="mb-1 flex items-center gap-2 text-xs text-gray-500">
+            {comment.pinned && (
+              <span className="rounded-full bg-green-600 px-2 py-0.5 text-xs font-medium text-white">
+                📌 Fijado
+              </span>
+            )}
             <span className="font-medium text-gray-800">{comment.author.username}</span>
             <span>{formatDate(comment.createdAt)}</span>
+            <EditedBadge editedAt={comment.editedAt} />
             <StatusBadge status={comment.status} />
           </div>
 
@@ -133,6 +149,16 @@ function CommentItem({ comment, postId, canComment }: CommentItemProps) {
                     Eliminar
                   </button>
                 )}
+                {canPin && (
+                  <button
+                    type="button"
+                    onClick={() => pin.mutate({ commentId: comment.id, next: !comment.pinned })}
+                    disabled={pin.isPending}
+                    className="text-xs font-medium text-green-700 hover:text-green-900 disabled:opacity-50"
+                  >
+                    {comment.pinned ? 'Desfijar' : 'Fijar'}
+                  </button>
+                )}
                 {modTargets.map((target) => (
                   <button
                     key={target.status}
@@ -168,17 +194,24 @@ function CommentItem({ comment, postId, canComment }: CommentItemProps) {
 interface CommentTreeProps {
   comments: CommentResponse[]
   postId: number
+  postAuthorId: number
   canComment: boolean
 }
 
-export function CommentTree({ comments, postId, canComment }: CommentTreeProps) {
+export function CommentTree({ comments, postId, postAuthorId, canComment }: CommentTreeProps) {
   if (comments.length === 0) {
     return <p className="text-sm text-gray-500">Todavía no hay comentarios.</p>
   }
   return (
     <div>
       {comments.map((comment) => (
-        <CommentItem key={comment.id} comment={comment} postId={postId} canComment={canComment} />
+        <CommentItem
+          key={comment.id}
+          comment={comment}
+          postId={postId}
+          postAuthorId={postAuthorId}
+          canComment={canComment}
+        />
       ))}
     </div>
   )
