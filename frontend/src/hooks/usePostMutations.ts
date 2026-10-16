@@ -50,7 +50,11 @@ export function useSavePost(postId: number) {
       await qc.cancelQueries({ queryKey: ['post', postId] })
       const prev = qc.getQueryData<PostResponse>(['post', postId])
       if (prev) {
-        qc.setQueryData<PostResponse>(['post', postId], { ...prev, saved: next })
+        qc.setQueryData<PostResponse>(['post', postId], {
+          ...prev,
+          saved: next,
+          saveCount: prev.saveCount + (next ? 1 : -1),
+        })
       }
       return { prev }
     },

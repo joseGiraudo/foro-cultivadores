@@ -34,6 +34,20 @@ public class User {
     @Column(length = 500)
     private String bio;
 
+    // Campos de perfil de comercio/growshop (opcionales). Solo se completan si el rol alcanza
+    // forum.rules.business-profile-min-role; para el resto quedan null.
+    @Column(length = 255)
+    private String website;
+
+    @Column(length = 30)
+    private String phone;
+
+    @Column(length = 50)
+    private String instagram;
+
+    @Column(length = 100)
+    private String location;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private Role role;
@@ -80,6 +94,38 @@ public class User {
 
     public void setBio(String bio) {
         this.bio = bio;
+    }
+
+    public String getWebsite() {
+        return website;
+    }
+
+    public void setWebsite(String website) {
+        this.website = website;
+    }
+
+    public String getPhone() {
+        return phone;
+    }
+
+    public void setPhone(String phone) {
+        this.phone = phone;
+    }
+
+    public String getInstagram() {
+        return instagram;
+    }
+
+    public void setInstagram(String instagram) {
+        this.instagram = instagram;
+    }
+
+    public String getLocation() {
+        return location;
+    }
+
+    public void setLocation(String location) {
+        this.location = location;
     }
 
     public Role getRole() {

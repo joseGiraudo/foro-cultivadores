@@ -29,14 +29,16 @@ public class CommentService {
     private final UserService userService;
     private final ForumPolicy policy;
     private final CommentVoteStats commentVoteStats;
+    private final CommentNotifier commentNotifier;
 
     CommentService(CommentRepository commentRepository, PostService postService, UserService userService,
-                   ForumPolicy policy, CommentVoteStats commentVoteStats) {
+                   ForumPolicy policy, CommentVoteStats commentVoteStats, CommentNotifier commentNotifier) {
         this.commentRepository = commentRepository;
         this.postService = postService;
         this.userService = userService;
         this.policy = policy;
         this.commentVoteStats = commentVoteStats;
+        this.commentNotifier = commentNotifier;
     }
 
     @Transactional
@@ -53,7 +55,28 @@ public class CommentService {
         Comment parent = resolveParent(request.parentCommentId(), postId);
         User author = userService.getEntityById(principal.getId());
         Comment comment = commentRepository.save(new Comment(request.content(), author, post, parent));
+        notifyNewComment(comment, parent, post, author);
         return single(comment, principal);
+    }
+
+    /**
+     * Genera la notificación del nuevo comentario: una respuesta avisa al autor del comentario
+     * padre; un comentario de primer nivel avisa al autor del post. Nunca se auto-notifica.
+     */
+    private void notifyNewComment(Comment comment, Comment parent, Post post, User author) {
+        if (parent != null) {
+            Long recipientId = parent.getAuthor().getId();
+            if (!recipientId.equals(author.getId())) {
+                commentNotifier.replyToComment(recipientId, author.getId(), author.getUsername(),
+                        post.getId(), post.getTitle(), comment.getId());
+            }
+        } else {
+            Long recipientId = post.getAuthor().getId();
+            if (!recipientId.equals(author.getId())) {
+                commentNotifier.commentOnPost(recipientId, author.getId(), author.getUsername(),
+                        post.getId(), post.getTitle(), comment.getId());
+            }
+        }
     }
 
     @Transactional(readOnly = true)

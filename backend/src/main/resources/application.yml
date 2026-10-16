@@ -50,6 +50,7 @@ forum:
     follow-min-role: USER
     follow-target-min-role: CONTRIBUTOR   # a quién se puede seguir
     moderation-min-role: MODERATOR
+    business-profile-min-role: CONTRIBUTOR   # quién puede completar datos de comercio (web, wsp, IG, ubicación)
   images:
     max-per-post: 10
     max-file-size: 5MB

@@ -24,13 +24,14 @@ public record PostSummaryResponse(
         long commentCount,
         VoteValue myVote,
         boolean saved,
+        long saveCount,
         Instant createdAt,
         Instant updatedAt,
         Instant editedAt
 ) {
 
     static PostSummaryResponse of(Post post, int score, long commentCount, VoteValue myVote, String thumbnailUrl,
-                                  boolean saved) {
+                                  boolean saved, long saveCount) {
         return new PostSummaryResponse(
                 post.getId(),
                 post.getTitle(),
@@ -44,6 +45,7 @@ public record PostSummaryResponse(
                 commentCount,
                 myVote,
                 saved,
+                saveCount,
                 post.getCreatedAt(),
                 post.getUpdatedAt(),
                 post.getEditedAt());

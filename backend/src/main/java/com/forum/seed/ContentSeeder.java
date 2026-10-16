@@ -148,10 +148,25 @@ class ContentSeeder implements ApplicationRunner {
         long img2 = imageService.upload(article.id(), growNorte, sampleImage).id();
 
         postService.update(article.id(), growNorte, new UpdatePostRequest(null,
-                "## Norte OG\n\nUna genética equilibrada, ideal para interior.\n\n"
+                "La **Norte OG** es una genética equilibrada que probamos durante tres ciclos "
+                        + "completos en cultivo de interior. En esta reseña te contamos cómo se comportó "
+                        + "en vegetativo y en floración, cuánto rindió por planta y para qué tipo de "
+                        + "cultivador la recomendamos.\n\n"
+                        + "## Vegetativo\n\n"
+                        + "Arranca vigorosa y con entrenudos cortos, lo que facilita el manejo en espacios "
+                        + "reducidos. Respondió muy bien al LST y a la poda apical, generando una canopia "
+                        + "pareja sin demasiado esfuerzo. En tres semanas ya estaba lista para pasar a flora.\n\n"
                         + "![Planta en vegetativo](/images/" + img1 + ")\n\n"
+                        + "## Floración\n\n"
+                        + "A las nueve semanas los cogollos estaban densos y muy resinosos, con un aroma "
+                        + "cítrico intenso que se sentía apenas abrías la carpa. Se mostró resistente a "
+                        + "hongos incluso con picos de humedad, algo clave si cultivás en climas húmedos.\n\n"
                         + "![Cogollo en floración](/images/" + img2 + ")\n\n"
-                        + "Rinde muy bien y es resistente a hongos. Recomendada.",
+                        + "## Rendimiento y conclusión\n\n"
+                        + "Rindió por encima del promedio para el espacio que ocupó, es noble con los "
+                        + "errores de riego y perdona desajustes de pH. La recomendamos tanto para quienes "
+                        + "arrancan como para cultivadores con experiencia que buscan una variedad estable, "
+                        + "productiva y de aroma marcado.",
                 null));
 
         postVoteService.vote(article.id(), user1, VoteValue.UPVOTE);
@@ -163,9 +178,22 @@ class ContentSeeder implements ApplicationRunner {
     private void seedGuideScenario(AuthUser growSur, AuthUser user1, AuthUser user2, long interior) {
         PostResponse guide = postService.create(growSur, new CreatePostRequest(
                 "Guía para principiantes: tu primer cultivo indoor",
-                "# Primeros pasos\n\n1. Elegí una genética fácil (autofloreciente).\n"
-                        + "2. Preparás un buen sustrato.\n3. Controlás luz, riego y ventilación.\n"
-                        + "4. Cosechás y curás con paciencia.",
+                "Montar tu primer cultivo indoor es más fácil de lo que parece si vas por partes y "
+                        + "no te apurás. En esta guía repasamos todo lo básico para que tu primera cosecha "
+                        + "salga bien, desde la elección de la genética hasta el curado final.\n\n"
+                        + "## 1. Elegí una genética fácil\n\n"
+                        + "Las autoflorecientes son ideales para empezar: son resistentes, rápidas y no "
+                        + "dependen del fotoperiodo, así que perdonan errores de iluminación.\n\n"
+                        + "## 2. Preparás un buen sustrato\n\n"
+                        + "Un sustrato aireado y con buen drenaje evita encharcamientos y la pudrición de "
+                        + "raíces. Sumá perlita si tu tierra retiene demasiada agua.\n\n"
+                        + "## 3. Controlás luz, riego y ventilación\n\n"
+                        + "18 horas de luz en vegetativo, riegos espaciados dejando secar el sustrato entre "
+                        + "uno y otro, y aire siempre en movimiento para prevenir hongos y fortalecer los tallos.\n\n"
+                        + "## 4. Cosechás y curás con paciencia\n\n"
+                        + "Mirá los tricomas con una lupa: cuando pasan de transparentes a lechosos es el "
+                        + "momento de cortar. Después viene el curado, al menos dos semanas en frascos "
+                        + "abriéndolos a diario. Es el paso que más mejora el sabor y casi nadie respeta.",
                 PostType.GUIDE, List.of(interior)));
         commentService.create(guide.id(), user1,
                 new CreateCommentRequest("¿Cuántas horas de luz conviene en vegetativo?", null));

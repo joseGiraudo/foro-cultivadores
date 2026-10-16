@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/useAuth'
+import { useUnreadCount } from '../hooks/useNotifications'
 import { isAtLeast } from '../lib/roles'
 import { RoleBadge } from './RoleBadge'
 
@@ -8,6 +9,8 @@ export function Navbar() {
   const { user, isAuthenticated, logout } = useAuth()
   const navigate = useNavigate()
   const [open, setOpen] = useState(false)
+  const { data: unread } = useUnreadCount()
+  const unreadCount = unread?.count ?? 0
 
   const linkClass = ({ isActive }: { isActive: boolean }) =>
     `px-3 py-2 rounded-lg text-sm font-semibold transition ${
@@ -42,6 +45,16 @@ export function Navbar() {
           <NavLink to="/saved" className={linkClass} onClick={close}>
             Guardados
           </NavLink>
+          <NavLink to="/notifications" className={linkClass} onClick={close}>
+            <span className="inline-flex items-center gap-1.5">
+              🔔 Notificaciones
+              {unreadCount > 0 && (
+                <span className="inline-flex min-w-5 items-center justify-center rounded-full bg-leaf-600 px-1.5 text-xs font-bold text-cream-50">
+                  {unreadCount > 99 ? '99+' : unreadCount}
+                </span>
+              )}
+            </span>
+          </NavLink>
           {isAtLeast(user.role, 'MODERATOR') && (
             <NavLink to="/moderation" className={linkClass} onClick={close}>
               Moderación
@@ -53,7 +66,7 @@ export function Navbar() {
             </NavLink>
           )}
           <Link
-            to={`/users/${user.id}`}
+            to={`/users/${user.username}`}
             onClick={close}
             className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition hover:bg-leaf-100"
           >

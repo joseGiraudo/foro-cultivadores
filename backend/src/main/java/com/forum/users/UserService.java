@@ -12,6 +12,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.forum.rules.ForumPolicy;
 import com.forum.shared.error.ApiException;
 
 @Service
@@ -20,11 +21,14 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final FollowStats followStats;
+    private final ForumPolicy policy;
 
-    UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, FollowStats followStats) {
+    UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, FollowStats followStats,
+                ForumPolicy policy) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.followStats = followStats;
+        this.policy = policy;
     }
 
     @Transactional
@@ -55,12 +59,49 @@ public class UserService {
         return toResponse(getEntityById(id), false, principal);
     }
 
+    @Transactional(readOnly = true)
+    public UserResponse getPublicProfileByUsername(String username, AuthUser principal) {
+        return toResponse(getByUsername(username), false, principal);
+    }
+
     @Transactional
     public UserResponse updateMe(AuthUser principal, UpdateMeRequest request) {
         principal.ensureCanWrite();
         User user = getEntityById(principal.getId());
-        user.setBio(request.bio());
+        user.setBio(blankToNull(request.bio()));
+
+        // Datos de comercio: solo si el rol alcanza. Si un rol insuficiente los envía, 403.
+        boolean hasBusinessData = anyPresent(
+                request.website(), request.phone(), request.instagram(), request.location());
+        boolean canSetBusiness = principal.getRole().isAtLeast(policy.businessProfileMinRole());
+        if (hasBusinessData && !canSetBusiness) {
+            throw ApiException.forbidden("Tu rol no permite completar datos de comercio");
+        }
+        if (canSetBusiness) {
+            user.setWebsite(blankToNull(request.website()));
+            user.setPhone(blankToNull(request.phone()));
+            user.setInstagram(blankToNull(request.instagram()));
+            user.setLocation(blankToNull(request.location()));
+        }
         return toResponse(user, true, principal);
+    }
+
+    /** Normaliza strings: espacios en blanco → null, para no guardar cadenas vacías. */
+    private static String blankToNull(String value) {
+        if (value == null) {
+            return null;
+        }
+        String trimmed = value.trim();
+        return trimmed.isEmpty() ? null : trimmed;
+    }
+
+    private static boolean anyPresent(String... values) {
+        for (String value : values) {
+            if (value != null && !value.isBlank()) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Transactional

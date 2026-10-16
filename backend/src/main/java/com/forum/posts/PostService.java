@@ -110,13 +110,15 @@ public class PostService {
         Map<Long, VoteValue> myVotes = principal == null ? Map.of() : postVoteStats.myVotesByPost(ids, principal.getId());
         Map<Long, String> thumbnails = postImages.thumbnailUrlByPost(ids);
         Set<Long> saved = principal == null ? Set.of() : postSaveStats.savedPostIds(ids, principal.getId());
+        Map<Long, Long> saveCounts = postSaveStats.saveCountsByPost(ids);
 
         return posts.stream().map(post -> PostSummaryResponse.of(post,
                 scores.getOrDefault(post.getId(), 0),
                 counts.getOrDefault(post.getId(), 0L),
                 myVotes.get(post.getId()),
                 thumbnails.get(post.getId()),
-                saved.contains(post.getId()))).toList();
+                saved.contains(post.getId()),
+                saveCounts.getOrDefault(post.getId(), 0L))).toList();
     }
 
     @Transactional
@@ -171,7 +173,9 @@ public class PostService {
         VoteValue myVote = principal == null ? null
                 : postVoteStats.myVotesByPost(ids, principal.getId()).get(post.getId());
         boolean saved = principal != null && postSaveStats.savedPostIds(ids, principal.getId()).contains(post.getId());
-        return PostResponse.of(post, votes, commentCount, myVote, postImages.imagesForPost(post.getId()), saved);
+        long saveCount = postSaveStats.saveCountsByPost(ids).getOrDefault(post.getId(), 0L);
+        return PostResponse.of(post, votes, commentCount, myVote, postImages.imagesForPost(post.getId()), saved,
+                saveCount);
     }
 
     private void requireCreationRole(AuthUser principal, PostType type) {

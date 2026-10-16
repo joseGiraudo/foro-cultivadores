@@ -1,14 +1,21 @@
 import { api } from './client'
-import type { Page, UserResponse } from './types'
+import type { Page, UpdateMeInput, UserResponse } from './types'
 
 // GET /users/{id} → perfil público (sin email).
 export function getUser(id: number): Promise<UserResponse> {
   return api.get<UserResponse>(`/users/${id}`)
 }
 
-// PATCH /users/me { bio } → perfil propio actualizado (incluye email).
-export function updateMe(bio: string): Promise<UserResponse> {
-  return api.patch<UserResponse>('/users/me', { bio })
+// GET /users/by-username/{username} → perfil público por nombre (sin email).
+// Se usa para las URLs de perfil, que exponen el username en vez del id.
+export function getUserByUsername(username: string): Promise<UserResponse> {
+  return api.get<UserResponse>(`/users/by-username/${encodeURIComponent(username)}`)
+}
+
+// PATCH /users/me → perfil propio actualizado (incluye email). Manda bio y, para roles
+// que lo permitan, los datos de comercio (el backend responde 403 si el rol no alcanza).
+export function updateMe(input: UpdateMeInput): Promise<UserResponse> {
+  return api.patch<UserResponse>('/users/me', input)
 }
 
 // POST/DELETE /users/{id}/follow → 204 (idempotentes).

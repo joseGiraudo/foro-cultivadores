@@ -34,4 +34,10 @@ class UserController {
     UserResponse profile(@AuthenticationPrincipal AuthUser principal, @PathVariable Long id) {
         return userService.getPublicProfile(id, principal);
     }
+
+    @GetMapping("/by-username/{username}")
+    UserResponse profileByUsername(@AuthenticationPrincipal AuthUser principal,
+                                   @PathVariable String username) {
+        return userService.getPublicProfileByUsername(username, principal);
+    }
 }

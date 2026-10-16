@@ -8,7 +8,7 @@ import { useFollow } from '../hooks/useUsers'
 // La UI no hardcodea follow-target-min-role: intenta seguir y maneja el 400.
 export function FollowButton({ profile }: { profile: UserResponse }) {
   const { user, isSuspended } = useAuth()
-  const follow = useFollow(profile.id)
+  const follow = useFollow(profile.id, profile.username)
   const [error, setError] = useState<string | null>(null)
 
   // Sin sesión o es el propio perfil: no mostramos el botón.

@@ -1,6 +1,7 @@
 package com.forum.posts;
 
 import java.util.Collection;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -12,4 +13,7 @@ public interface PostSaveStats {
 
     /** De los posts dados, cuáles guardó el usuario. Vacío si userId es null. */
     Set<Long> savedPostIds(Collection<Long> postIds, Long userId);
+
+    /** Cantidad de guardados por post; los posts sin guardados no aparecen (se asume 0). */
+    Map<Long, Long> saveCountsByPost(Collection<Long> postIds);
 }

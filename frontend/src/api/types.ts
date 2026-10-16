@@ -79,6 +79,8 @@ export interface PostSummaryResponse {
   myVote: VoteValue | null
   // Si el usuario actual guardó el post (false si es anónimo).
   saved: boolean
+  // Cantidad total de usuarios que guardaron el post.
+  saveCount: number
   createdAt: string
   updatedAt: string
   // Última edición de contenido; null si nunca se editó (los cambios de estado no cuentan).
@@ -103,6 +105,8 @@ export interface PostResponse {
   myVote: VoteValue | null
   // Si el usuario actual guardó el post (false si es anónimo).
   saved: boolean
+  // Cantidad total de usuarios que guardaron el post.
+  saveCount: number
   createdAt: string
   updatedAt: string
   // Última edición de contenido; null si nunca se editó (los cambios de estado no cuentan).
@@ -142,10 +146,39 @@ export interface UserResponse {
   username: string
   email: string | null
   bio: string | null
+  // Datos de comercio/growshop (opcionales; null si no se cargaron o el rol no los permite).
+  website: string | null
+  phone: string | null
+  instagram: string | null
+  location: string | null
   role: Role
   status: UserStatus
   followerCount: number
   followingCount: number
   followedByMe: boolean | null
+  createdAt: string
+}
+
+// Payload de PATCH /users/me. bio siempre; los de comercio solo los manda la UI si el rol alcanza.
+export interface UpdateMeInput {
+  bio: string
+  website?: string
+  phone?: string
+  instagram?: string
+  location?: string
+}
+
+export type NotificationType = 'COMMENT_ON_POST' | 'REPLY_TO_COMMENT'
+
+// Notificación in-app. actorUsername y postTitle son snapshots (point-in-time) del backend.
+export interface NotificationResponse {
+  id: number
+  type: NotificationType
+  actorUserId: number
+  actorUsername: string
+  postId: number
+  postTitle: string
+  commentId: number | null
+  read: boolean
   createdAt: string
 }

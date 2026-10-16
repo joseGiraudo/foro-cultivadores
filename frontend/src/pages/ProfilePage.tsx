@@ -9,18 +9,23 @@ import { RoleBadge } from '../components/RoleBadge'
 import { EmptyState, ErrorState, Loading } from '../components/states'
 import { useAuth } from '../auth/useAuth'
 import { usePosts } from '../hooks/usePosts'
-import { useUser } from '../hooks/useUsers'
+import { useUserByUsername } from '../hooks/useUsers'
 import { formatDate } from '../lib/format'
 import { isAtLeast } from '../lib/roles'
 
+// Asegura que la URL tenga protocolo (los usuarios suelen escribir "tugrow.com").
+function toHttpUrl(url: string): string {
+  return /^https?:\/\//i.test(url) ? url : `https://${url}`
+}
+
 export function ProfilePage() {
-  const { id } = useParams<{ id: string }>()
-  const userId = Number(id)
+  const { username } = useParams<{ username: string }>()
   const { user: me } = useAuth()
 
-  const { data: profile, isLoading, isError, error, refetch } = useUser(userId)
+  const { data: profile, isLoading, isError, error, refetch } = useUserByUsername(username ?? '')
   const [page, setPage] = useState(0)
-  const { data: posts } = usePosts({ authorId: userId, page })
+  // Los posts del autor se filtran por id; esperamos a tener el perfil cargado.
+  const { data: posts } = usePosts({ authorId: profile?.id, page }, { enabled: !!profile })
 
   if (isLoading) return <Loading />
   if (isError) return <ErrorState error={error} onRetry={refetch} />
@@ -78,11 +83,53 @@ export function ProfilePage() {
             </div>
           )}
 
+          {(profile.location || profile.website || profile.phone || profile.instagram) && (
+            <div className="mt-4 flex flex-wrap gap-2">
+              {profile.location && <span className={chipClass}>📍 {profile.location}</span>}
+              {profile.website && (
+                <a
+                  href={toHttpUrl(profile.website)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`${chipClass} hover:ring-leaf-300`}
+                >
+                  🌐 Sitio web
+                </a>
+              )}
+              {profile.phone && (
+                <a
+                  href={`https://wa.me/${profile.phone.replace(/[^0-9]/g, '')}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`${chipClass} hover:ring-leaf-300`}
+                >
+                  💬 WhatsApp
+                </a>
+              )}
+              {profile.instagram && (
+                <a
+                  href={`https://instagram.com/${profile.instagram.replace(/^@/, '')}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`${chipClass} hover:ring-leaf-300`}
+                >
+                  📸 {profile.instagram.startsWith('@') ? profile.instagram : `@${profile.instagram}`}
+                </a>
+              )}
+            </div>
+          )}
+
           <div className="mt-4 flex flex-wrap gap-2">
-            <Link to={`/users/${profile.id}/followers`} className={`${chipClass} hover:ring-leaf-300`}>
+            <Link
+              to={`/users/${profile.username}/followers`}
+              className={`${chipClass} hover:ring-leaf-300`}
+            >
               <strong className="text-ink">{profile.followerCount}</strong> seguidores
             </Link>
-            <Link to={`/users/${profile.id}/following`} className={`${chipClass} hover:ring-leaf-300`}>
+            <Link
+              to={`/users/${profile.username}/following`}
+              className={`${chipClass} hover:ring-leaf-300`}
+            >
               <strong className="text-ink">{profile.followingCount}</strong> siguiendo
             </Link>
             <span className={chipClass}>Desde {formatDate(profile.createdAt)}</span>

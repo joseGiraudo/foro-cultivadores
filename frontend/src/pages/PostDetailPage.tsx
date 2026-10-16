@@ -66,7 +66,7 @@ export function PostDetailPage() {
 
         <div className="mb-4 flex flex-wrap items-center gap-3 text-sm text-ink-faint">
           <Link
-            to={`/users/${post.author.id}`}
+            to={`/users/${post.author.username}`}
             className="flex items-center gap-1 hover:underline"
           >
             {post.author.username}
@@ -74,6 +74,7 @@ export function PostDetailPage() {
           </Link>
           <PostVoteControl post={post} />
           <span>💬 {post.commentCount}</span>
+          <span>🔖 {post.saveCount}</span>
           <span>{formatDate(post.createdAt)}</span>
           <EditedBadge editedAt={post.editedAt} />
         </div>

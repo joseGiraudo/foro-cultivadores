@@ -39,6 +39,7 @@ export function PostCard({ post }: { post: PostSummaryResponse }) {
           </span>
           <span className="text-leaf-700">▲ {post.score}</span>
           <span>💬 {post.commentCount}</span>
+          <span>🔖 {post.saveCount}</span>
           <span>{formatDate(post.createdAt)}</span>
           <EditedBadge editedAt={post.editedAt} />
         </div>

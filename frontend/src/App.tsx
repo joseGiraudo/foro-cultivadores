@@ -10,6 +10,7 @@ import { HomePage } from './pages/HomePage'
 import { LoginPage } from './pages/LoginPage'
 import { MePage } from './pages/MePage'
 import { ModerationPage } from './pages/ModerationPage'
+import { NotificationsPage } from './pages/NotificationsPage'
 import { PlaceholderPage } from './pages/PlaceholderPage'
 import { PostDetailPage } from './pages/PostDetailPage'
 import { ProfilePage } from './pages/ProfilePage'
@@ -44,9 +45,9 @@ export default function App() {
             }
           />
           <Route path="/posts/:id" element={<PostDetailPage />} />
-          <Route path="/users/:id/followers" element={<FollowListPage mode="followers" />} />
-          <Route path="/users/:id/following" element={<FollowListPage mode="following" />} />
-          <Route path="/users/:id" element={<ProfilePage />} />
+          <Route path="/users/:username/followers" element={<FollowListPage mode="followers" />} />
+          <Route path="/users/:username/following" element={<FollowListPage mode="following" />} />
+          <Route path="/users/:username" element={<ProfilePage />} />
           <Route
             path="/me"
             element={
@@ -60,6 +61,14 @@ export default function App() {
             element={
               <RequireAuth>
                 <SavedPostsPage />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/notifications"
+            element={
+              <RequireAuth>
+                <NotificationsPage />
               </RequireAuth>
             }
           />

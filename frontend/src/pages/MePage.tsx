@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { ApiError } from '../api/client'
+import type { UpdateMeInput } from '../api/types'
 import { Avatar } from '../components/Avatar'
 import { MarkdownEditor } from '../components/MarkdownEditor'
 import { RoleBadge } from '../components/RoleBadge'
@@ -15,6 +16,10 @@ export function MePage() {
 
   // La ruta está bajo RequireAuth, así que user no debería ser null; guard defensivo.
   const [bio, setBio] = useState(user?.bio ?? '')
+  const [website, setWebsite] = useState(user?.website ?? '')
+  const [phone, setPhone] = useState(user?.phone ?? '')
+  const [instagram, setInstagram] = useState(user?.instagram ?? '')
+  const [location, setLocation] = useState(user?.location ?? '')
   const [error, setError] = useState<string | null>(null)
   const [saved, setSaved] = useState(false)
 
@@ -26,11 +31,19 @@ export function MePage() {
     event.preventDefault()
     setError(null)
     setSaved(false)
+    const input: UpdateMeInput = { bio }
+    // Solo mandamos datos de comercio si el rol los permite (el backend igual valida con 403).
+    if (isPro) {
+      input.website = website
+      input.phone = phone
+      input.instagram = instagram
+      input.location = location
+    }
     try {
-      await updateMe.mutateAsync(bio)
+      await updateMe.mutateAsync(input)
       setSaved(true)
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'No se pudo guardar la bio.')
+      setError(err instanceof ApiError ? err.message : 'No se pudo guardar el perfil.')
     }
   }
 
@@ -62,7 +75,7 @@ export function MePage() {
         </span>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-3">
+      <form onSubmit={handleSubmit} className="space-y-5">
         <div>
           <div className="mb-1 flex items-center justify-between">
             <span className="text-sm font-semibold text-ink">Bio</span>
@@ -79,19 +92,70 @@ export function MePage() {
           </p>
         </div>
 
+        {isPro && (
+          <fieldset className="space-y-3 rounded-xl border border-sand-200 bg-cream-100 p-4 shadow-soft">
+            <legend className="px-1 font-display text-sm font-semibold text-leaf-700">
+              🏪 Datos de comercio
+            </legend>
+            <p className="text-xs text-ink-faint">
+              Opcionales. Se muestran en tu perfil público para que te puedan contactar.
+            </p>
+            <label className="block">
+              <span className="field-label">Sitio web</span>
+              <input
+                type="url"
+                value={website}
+                onChange={(e) => setWebsite(e.target.value)}
+                maxLength={255}
+                placeholder="https://tugrowshop.com"
+                className="input"
+              />
+            </label>
+            <label className="block">
+              <span className="field-label">WhatsApp / Teléfono</span>
+              <input
+                type="tel"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                maxLength={30}
+                placeholder="+54 9 11 1234-5678"
+                className="input"
+              />
+            </label>
+            <label className="block">
+              <span className="field-label">Instagram</span>
+              <input
+                type="text"
+                value={instagram}
+                onChange={(e) => setInstagram(e.target.value)}
+                maxLength={50}
+                placeholder="@tugrowshop"
+                className="input"
+              />
+            </label>
+            <label className="block">
+              <span className="field-label">Ubicación</span>
+              <input
+                type="text"
+                value={location}
+                onChange={(e) => setLocation(e.target.value)}
+                maxLength={100}
+                placeholder="Ciudad, provincia"
+                className="input"
+              />
+            </label>
+          </fieldset>
+        )}
+
         {error && <p className="text-sm text-red-700">{error}</p>}
-        {saved && <p className="text-sm text-leaf-700">Bio actualizada.</p>}
+        {saved && <p className="text-sm text-leaf-700">Perfil actualizado.</p>}
 
         <div className="flex gap-3">
-          <button
-            type="submit"
-            disabled={updateMe.isPending}
-            className="rounded-lg bg-leaf-600 px-4 py-2 font-semibold text-cream-50 shadow-soft transition hover:bg-leaf-700 disabled:opacity-50"
-          >
+          <button type="submit" disabled={updateMe.isPending} className="btn-primary">
             {updateMe.isPending ? 'Guardando…' : 'Guardar'}
           </button>
           <Link
-            to={`/users/${user.id}`}
+            to={`/users/${user.username}`}
             className="rounded-lg border border-sand-200 px-4 py-2 font-semibold text-ink-soft transition hover:bg-leaf-100 hover:text-leaf-700"
           >
             Ver mi perfil público

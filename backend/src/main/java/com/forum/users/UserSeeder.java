@@ -34,10 +34,17 @@ class UserSeeder implements ApplicationRunner {
 
         create("admin", "admin@forum.test", Role.ADMIN, UserStatus.ACTIVE, null);
         create("mod", "mod@forum.test", Role.MODERATOR, UserStatus.ACTIVE, null);
-        create("grow_norte", "grow_norte@forum.test", Role.CONTRIBUTOR, UserStatus.ACTIVE,
-                "Growshop del norte. Genéticas, sustratos y asesoramiento para tu cultivo.");
-        create("grow_sur", "grow_sur@forum.test", Role.CONTRIBUTOR, UserStatus.ACTIVE,
-                "Growshop del sur. Equipamiento indoor y guías para principiantes.");
+        createGrowshop("grow_norte", "grow_norte@forum.test",
+                "**Growshop del Norte** 🌱\n\nGenéticas premium, sustratos y asesoramiento para tu "
+                        + "cultivo. Envíos a todo el país.\n\n- Atención personalizada\n"
+                        + "- Indoor y outdoor",
+                "https://grownorte.example.com", "+54 9 387 555-0101", "@grow_norte",
+                "Salta, Argentina");
+        createGrowshop("grow_sur", "grow_sur@forum.test",
+                "**Growshop del Sur** ❄️\n\nEquipamiento indoor, iluminación LED y guías para "
+                        + "principiantes. Local a la calle y tienda online.",
+                "https://growsur.example.com", "+54 9 294 555-0202", "@grow_sur",
+                "Bariloche, Río Negro");
         create("user1", "user1@forum.test", Role.USER, UserStatus.ACTIVE, null);
         create("user2", "user2@forum.test", Role.USER, UserStatus.ACTIVE, null);
         create("user3", "user3@forum.test", Role.USER, UserStatus.ACTIVE, null);
@@ -47,6 +54,19 @@ class UserSeeder implements ApplicationRunner {
     private void create(String username, String email, Role role, UserStatus status, String bio) {
         User user = new User(username, email, passwordEncoder.encode(DEFAULT_PASSWORD), role, status);
         user.setBio(bio);
+        userRepository.save(user);
+    }
+
+    /** Crea un growshop (CONTRIBUTOR activo) con datos de comercio de ejemplo. */
+    private void createGrowshop(String username, String email, String bio, String website,
+                                String phone, String instagram, String location) {
+        User user = new User(username, email, passwordEncoder.encode(DEFAULT_PASSWORD),
+                Role.CONTRIBUTOR, UserStatus.ACTIVE);
+        user.setBio(bio);
+        user.setWebsite(website);
+        user.setPhone(phone);
+        user.setInstagram(instagram);
+        user.setLocation(location);
         userRepository.save(user);
     }
 }
