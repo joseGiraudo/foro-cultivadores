@@ -32,71 +32,78 @@ export function PostDetailPage() {
 
   return (
     <article>
-      <Link to="/" className="text-sm text-green-700 hover:underline">
+      <Link to="/" className="text-sm font-semibold text-leaf-700 hover:underline">
         ← Volver
       </Link>
 
-      <div className="mt-3 flex flex-wrap items-center gap-2">
-        <PostTypeBadge type={post.postType} />
-        <StatusBadge status={post.status} />
-        {post.categories.map((category) => (
-          <span key={category.id} className="text-xs text-gray-500">
-            #{category.name}
-          </span>
-        ))}
-      </div>
-
-      <div className="mb-2 mt-2 flex items-start justify-between gap-3">
-        <h1 className="text-2xl font-bold text-gray-900">{post.title}</h1>
-        <div className="flex shrink-0 items-center gap-2">
-          {post.status === 'ACTIVE' && <SaveButton post={post} />}
-          {user?.id === post.author.id && post.status === 'ACTIVE' && (
-            <Link
-              to={`/posts/${post.id}/edit`}
-              className="rounded-md border border-gray-300 px-3 py-1 text-sm font-medium text-gray-700 hover:bg-gray-100"
-            >
-              Editar
-            </Link>
-          )}
+      <div className="mt-3 rounded-xl border border-sand-200 bg-cream-100 p-4 shadow-soft sm:p-6">
+        <div className="flex flex-wrap items-center gap-2">
+          <PostTypeBadge type={post.postType} />
+          <StatusBadge status={post.status} />
+          {post.categories.map((category) => (
+            <span key={category.id} className="text-xs text-bark-600">
+              #{category.name}
+            </span>
+          ))}
         </div>
+
+        <div className="mb-2 mt-2 flex items-start justify-between gap-3">
+          <h1 className="min-w-0 break-words text-2xl font-semibold text-ink sm:text-3xl">
+            {post.title}
+          </h1>
+          <div className="flex shrink-0 items-center gap-2">
+            {post.status === 'ACTIVE' && <SaveButton post={post} />}
+            {user?.id === post.author.id && post.status === 'ACTIVE' && (
+              <Link
+                to={`/posts/${post.id}/edit`}
+                className="rounded-lg border border-sand-200 px-3 py-1 text-sm font-semibold text-ink-soft transition hover:bg-leaf-100 hover:text-leaf-700"
+              >
+                Editar
+              </Link>
+            )}
+          </div>
+        </div>
+
+        <div className="mb-4 flex flex-wrap items-center gap-3 text-sm text-ink-faint">
+          <Link
+            to={`/users/${post.author.id}`}
+            className="flex items-center gap-1 hover:underline"
+          >
+            {post.author.username}
+            <RoleBadge role={post.author.role} />
+          </Link>
+          <PostVoteControl post={post} />
+          <span>💬 {post.commentCount}</span>
+          <span>{formatDate(post.createdAt)}</span>
+          <EditedBadge editedAt={post.editedAt} />
+        </div>
+
+        <div className="mb-4">
+          <PostModerationActions post={post} />
+        </div>
+
+        {/* En consultas las imágenes se muestran en galería; en artículos/guías van embebidas en el Markdown. */}
+        {post.postType === 'QUESTION' && <PostGallery images={post.images} />}
+
+        <MarkdownContent content={post.content} />
       </div>
-
-      <div className="mb-4 flex flex-wrap items-center gap-3 text-sm text-gray-500">
-        <Link to={`/users/${post.author.id}`} className="flex items-center gap-1 hover:underline">
-          {post.author.username}
-          <RoleBadge role={post.author.role} />
-        </Link>
-        <PostVoteControl post={post} />
-        <span>💬 {post.commentCount}</span>
-        <span>{formatDate(post.createdAt)}</span>
-        <EditedBadge editedAt={post.editedAt} />
-      </div>
-
-      <div className="mb-4">
-        <PostModerationActions post={post} />
-      </div>
-
-      {/* En consultas las imágenes se muestran en galería; en artículos/guías van embebidas en el Markdown. */}
-      {post.postType === 'QUESTION' && <PostGallery images={post.images} />}
-
-      <MarkdownContent content={post.content} />
 
       <section className="mt-8">
-        <h2 className="mb-3 text-lg font-semibold text-gray-900">
+        <h2 className="mb-3 text-xl font-semibold text-ink">
           Comentarios ({post.commentCount})
         </h2>
 
         {post.status === 'ACTIVE' && (
           <div className="mb-4">
             {!user ? (
-              <p className="text-sm text-gray-500">
-                <Link to="/login" className="font-medium text-green-700 hover:underline">
+              <p className="text-sm text-ink-soft">
+                <Link to="/login" className="font-semibold text-leaf-700 hover:underline">
                   Ingresá
                 </Link>{' '}
                 para comentar.
               </p>
             ) : isSuspended ? (
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-ink-soft">
                 No podés comentar: tu cuenta está suspendida.
               </p>
             ) : (

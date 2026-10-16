@@ -12,7 +12,7 @@ const LABELS: Record<ContentStatus, string> = {
 export function StatusBadge({ status }: { status: ContentStatus }) {
   if (status === 'ACTIVE') return null
   return (
-    <span className="rounded-full bg-gray-200 px-2 py-0.5 text-xs font-medium text-gray-700">
+    <span className="rounded-full bg-sand-200 px-2 py-0.5 text-xs font-medium text-bark-700">
       {LABELS[status]}
     </span>
   )

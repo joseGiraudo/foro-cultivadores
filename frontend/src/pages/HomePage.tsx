@@ -30,11 +30,12 @@ export function HomePage() {
     setPage(0)
   }
 
-  const selectClass = 'rounded-md border border-gray-300 px-3 py-2 text-sm'
+  const selectClass =
+    'rounded-lg border border-sand-200 bg-cream-100 px-3 py-2 text-sm text-ink shadow-soft transition focus:border-leaf-400 focus:outline-none'
 
   return (
     <div>
-      <h1 className="mb-4 text-2xl font-bold text-gray-900">Publicaciones</h1>
+      <h1 className="mb-4 text-3xl font-semibold text-ink">Publicaciones</h1>
 
       <div className="mb-4 flex flex-wrap gap-3">
         <select

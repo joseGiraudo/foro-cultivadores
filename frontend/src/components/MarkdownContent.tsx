@@ -32,13 +32,22 @@ const components: Components = {
   img: (props) => (
     <img className="my-3 max-w-full rounded-md" loading="lazy" alt={props.alt ?? ''} {...props} />
   ),
+  // Las tablas de GFM pueden ser más anchas que la pantalla: las envolvemos en un
+  // contenedor con scroll horizontal para no romper el layout en mobile.
+  table: (props) => (
+    <div className="my-3 overflow-x-auto">
+      <table className="w-full border-collapse text-sm" {...props} />
+    </div>
+  ),
+  th: (props) => <th className="border border-gray-200 px-3 py-1 text-left font-semibold" {...props} />,
+  td: (props) => <td className="border border-gray-200 px-3 py-1" {...props} />,
 }
 
 // Renderiza Markdown crudo del backend. La sanitización (rehype-sanitize) es OBLIGATORIA:
 // es la defensa anti-XSS del front.
 export function MarkdownContent({ content }: { content: string }) {
   return (
-    <div className="text-gray-800">
+    <div className="break-words text-gray-800">
       <Markdown
         remarkPlugins={[remarkGfm]}
         rehypePlugins={[rehypeSanitize]}

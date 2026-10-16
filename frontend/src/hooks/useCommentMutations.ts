@@ -50,8 +50,12 @@ export function useChangeCommentStatus(postId: number) {
 export function usePinComment(postId: number) {
   const invalidate = useCommentInvalidation(postId)
   return useMutation({
-    mutationFn: ({ commentId, next }: { commentId: number; next: boolean }) =>
-      next ? pinComment(commentId) : unpinComment(commentId),
+    mutationFn: async ({ commentId, next }: { commentId: number; next: boolean }) => {
+      // Descartamos el body (el pin devuelve CommentResponse, el unpin void);
+      // nos apoyamos en la invalidación de onSuccess para reconciliar.
+      if (next) await pinComment(commentId)
+      else await unpinComment(commentId)
+    },
     onSuccess: invalidate,
   })
 }

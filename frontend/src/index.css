@@ -1,7 +1,76 @@
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..700&family=Nunito+Sans:wght@400;600;700;800&display=swap');
 @import 'tailwindcss';
 
-html,
-body,
-#root {
-  min-height: 100svh;
+/*
+  Sistema de diseño "orgánico": tonos cálidos (crema, arena, madera),
+  verde hoja como marca y negro cálido como tinta. Definido como tokens de
+  Tailwind v4 (@theme) para poder propagarlo al resto del front cambiando
+  clases en vez de colores sueltos.
+*/
+@theme {
+  /* Neutros cálidos: crema / arena */
+  --color-cream-50: #fbf8f1;
+  --color-cream-100: #f5efe2;
+  --color-sand-200: #e9e0cd;
+  --color-sand-300: #d9ccb2;
+
+  /* Madera (acento secundario) */
+  --color-bark-400: #c0a378;
+  --color-bark-500: #a8865c;
+  --color-bark-600: #8a6d45;
+  --color-bark-700: #6b5435;
+
+  /* Verde hoja (marca) */
+  --color-leaf-100: #e7f0de;
+  --color-leaf-200: #cfe2c0;
+  --color-leaf-300: #afd097;
+  --color-leaf-400: #8fb873;
+  --color-leaf-500: #6e9b52;
+  --color-leaf-600: #567a3f;
+  --color-leaf-700: #41602f;
+
+  /* Tinta (negro cálido) */
+  --color-ink: #26231c;
+  --color-ink-soft: #5f584c;
+  --color-ink-faint: #8a8372;
+
+  /* Tipografía */
+  --font-sans: 'Nunito Sans', system-ui, -apple-system, sans-serif;
+  --font-display: 'Fraunces', Georgia, 'Times New Roman', serif;
+
+  /* Sombras cálidas y suaves */
+  --shadow-soft: 0 1px 2px rgba(38, 35, 28, 0.04), 0 10px 30px -18px rgba(38, 35, 28, 0.25);
+  --shadow-raised: 0 2px 4px rgba(38, 35, 28, 0.06), 0 16px 40px -20px rgba(38, 35, 28, 0.35);
+}
+
+@layer base {
+  html,
+  body,
+  #root {
+    min-height: 100svh;
+  }
+
+  body {
+    background-color: var(--color-cream-50);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Paso de sangría por nivel en el árbol de comentarios: menor en mobile
+     para no ahogar el texto en pantallas angostas. */
+  :root {
+    --comment-step: 0.6rem;
+  }
+  @media (min-width: 768px) {
+    :root {
+      --comment-step: 1.25rem;
+    }
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display);
+  }
 }

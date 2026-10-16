@@ -36,10 +36,10 @@ export function FollowButton({ profile }: { profile: UserResponse }) {
         onClick={handleClick}
         disabled={follow.isPending || isSuspended}
         title={isSuspended ? 'Tu cuenta está suspendida' : undefined}
-        className={`rounded-md px-4 py-1.5 text-sm font-medium transition disabled:opacity-50 ${
+        className={`rounded-lg px-4 py-1.5 text-sm font-semibold transition disabled:opacity-50 ${
           following
-            ? 'border border-gray-300 text-gray-700 hover:bg-gray-100'
-            : 'bg-green-700 text-white hover:bg-green-800'
+            ? 'border border-sand-200 text-ink-soft hover:bg-leaf-100 hover:text-leaf-700'
+            : 'bg-leaf-600 text-cream-50 shadow-soft hover:bg-leaf-700'
         }`}
       >
         {following ? 'Siguiendo' : 'Seguir'}

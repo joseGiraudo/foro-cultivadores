@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
+import { Avatar } from '../components/Avatar'
 import { Pagination } from '../components/Pagination'
 import { RoleBadge } from '../components/RoleBadge'
 import { EmptyState, ErrorState, Loading } from '../components/states'
@@ -21,10 +22,10 @@ export function FollowListPage({ mode }: { mode: 'followers' | 'following' }) {
 
   return (
     <div className="mx-auto max-w-2xl">
-      <Link to={`/users/${userId}`} className="text-sm text-green-700 hover:underline">
+      <Link to={`/users/${userId}`} className="text-sm font-semibold text-leaf-700 hover:underline">
         ← Volver al perfil
       </Link>
-      <h1 className="mb-4 mt-2 text-2xl font-bold text-gray-900">{title}</h1>
+      <h1 className="mb-4 mt-2 text-2xl font-semibold text-ink">{title}</h1>
 
       {query.isLoading && <Loading />}
       {query.isError && <ErrorState error={query.error} onRetry={query.refetch} />}
@@ -39,13 +40,16 @@ export function FollowListPage({ mode }: { mode: 'followers' | 'following' }) {
                 <li key={person.id}>
                   <Link
                     to={`/users/${person.id}`}
-                    className="flex items-center gap-2 rounded-md border border-gray-200 bg-white p-3 hover:border-green-400"
+                    className="flex items-center gap-3 rounded-xl border border-sand-200 bg-cream-100 p-3 shadow-soft transition hover:border-leaf-300 hover:shadow-raised"
                   >
-                    <span className="font-medium text-gray-900">{person.username}</span>
-                    <RoleBadge role={person.role} />
-                    {person.bio && (
-                      <span className="truncate text-sm text-gray-500">{person.bio}</span>
-                    )}
+                    <Avatar name={person.username} size="sm" />
+                    <div className="flex min-w-0 flex-1 items-center gap-2">
+                      <span className="font-semibold text-ink">{person.username}</span>
+                      <RoleBadge role={person.role} />
+                      {person.bio && (
+                        <span className="truncate text-sm text-ink-faint">{person.bio}</span>
+                      )}
+                    </div>
                   </Link>
                 </li>
               ))}

@@ -81,7 +81,7 @@ function CommentItem({ comment, postId, postAuthorId, canComment }: CommentItemP
       className={`border-l py-2 pl-3 ${
         comment.pinned ? 'border-green-500 bg-green-50/60' : 'border-gray-200'
       }`}
-      style={{ marginLeft: `${indent * 1.25}rem` }}
+      style={{ marginLeft: `calc(${indent} * var(--comment-step))` }}
     >
       {hidden ? (
         <p className="text-sm italic text-gray-400">
@@ -111,7 +111,9 @@ function CommentItem({ comment, postId, postAuthorId, canComment }: CommentItemP
             />
           ) : (
             <>
-              <p className="mb-1 whitespace-pre-wrap text-sm text-gray-800">{comment.content}</p>
+              <p className="mb-1 whitespace-pre-wrap break-words text-sm text-gray-800">
+                {comment.content}
+              </p>
               <div className="flex items-center gap-3">
                 <VoteControl
                   score={comment.score}

@@ -1,12 +1,12 @@
 import { ApiError } from '../api/client'
 
 export function Loading({ label = 'Cargando…' }: { label?: string }) {
-  return <p className="py-8 text-center text-gray-500">{label}</p>
+  return <p className="py-8 text-center text-ink-faint">{label}</p>
 }
 
 export function EmptyState({ message }: { message: string }) {
   return (
-    <div className="rounded-md border border-dashed border-gray-300 py-10 text-center text-gray-500">
+    <div className="rounded-xl border border-dashed border-sand-300 py-10 text-center text-ink-faint">
       {message}
     </div>
   )
