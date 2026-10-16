@@ -90,9 +90,9 @@ export function ImageUploader({ postId, images, onInsertReference }: ImageUpload
           disabled={atLimit || upload.isPending}
           className="text-sm"
         />
-        {upload.isPending && <span className="text-sm text-gray-500">Subiendo…</span>}
+        {upload.isPending && <span className="text-sm text-ink-faint">Subiendo…</span>}
       </div>
-      <p className="mb-2 text-xs text-gray-500">
+      <p className="mb-2 text-xs text-ink-faint">
         {images.length}/{MAX_PER_POST} imágenes · podés elegir varias a la vez · JPEG, PNG o WebP ·
         hasta 5 MB cada una.
       </p>
@@ -101,7 +101,7 @@ export function ImageUploader({ postId, images, onInsertReference }: ImageUpload
       {images.length > 0 && (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
           {images.map((image) => (
-            <div key={image.id} className="rounded-md border border-gray-200 p-2">
+            <div key={image.id} className="rounded-lg border border-sand-200 p-2">
               <img
                 src={resolveImageUrl(image.url)}
                 alt=""
@@ -112,7 +112,7 @@ export function ImageUploader({ postId, images, onInsertReference }: ImageUpload
                   <button
                     type="button"
                     onClick={() => onInsertReference(image)}
-                    className="text-xs font-medium text-green-700 hover:underline"
+                    className="text-xs font-semibold text-leaf-700 hover:underline"
                   >
                     Insertar en el texto
                   </button>

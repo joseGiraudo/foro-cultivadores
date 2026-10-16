@@ -11,7 +11,7 @@ interface CategoryPickerProps {
 export function CategoryPicker({ selected, onChange, max = 3 }: CategoryPickerProps) {
   const { data: categories, isLoading } = useCategories()
 
-  if (isLoading) return <p className="text-sm text-gray-500">Cargando categorías…</p>
+  if (isLoading) return <p className="text-sm text-ink-faint">Cargando categorías…</p>
   if (!categories) return null
 
   function toggle(id: number) {
@@ -35,8 +35,8 @@ export function CategoryPicker({ selected, onChange, max = 3 }: CategoryPickerPr
             disabled={disabled}
             className={`rounded-full border px-3 py-1 text-sm transition ${
               active
-                ? 'border-green-600 bg-green-100 text-green-800'
-                : 'border-gray-300 text-gray-700 hover:bg-gray-100'
+                ? 'border-leaf-600 bg-leaf-100 text-leaf-700'
+                : 'border-sand-200 text-ink-soft hover:bg-leaf-100 hover:text-leaf-700'
             } disabled:cursor-not-allowed disabled:opacity-40`}
           >
             {category.name}

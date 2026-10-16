@@ -44,14 +44,14 @@ export function VoteControl({
         aria-label="Votar positivo"
         aria-pressed={myVote === 'UPVOTE'}
         className={`${buttonBase} ${!split ? 'w-7 px-0' : ''} ${
-          myVote === 'UPVOTE' ? 'bg-green-100 text-green-700' : 'text-gray-500 hover:bg-gray-100'
+          myVote === 'UPVOTE' ? 'bg-leaf-100 text-leaf-700' : 'text-ink-faint hover:bg-leaf-100'
         } disabled:hover:bg-transparent disabled:opacity-50`}
       >
         <span>▲</span>
         {split && <span className="font-medium tabular-nums">{upvotes}</span>}
       </button>
       {!split && (
-        <span className="min-w-6 text-center text-sm font-medium text-gray-800">{score}</span>
+        <span className="min-w-6 text-center text-sm font-semibold text-ink">{score}</span>
       )}
       <button
         type="button"
@@ -60,7 +60,7 @@ export function VoteControl({
         aria-label="Votar negativo"
         aria-pressed={myVote === 'DOWNVOTE'}
         className={`${buttonBase} ${!split ? 'w-7 px-0' : ''} ${
-          myVote === 'DOWNVOTE' ? 'bg-red-100 text-red-700' : 'text-gray-500 hover:bg-gray-100'
+          myVote === 'DOWNVOTE' ? 'bg-red-100 text-red-700' : 'text-ink-faint hover:bg-leaf-100'
         } disabled:hover:bg-transparent disabled:opacity-50`}
       >
         <span>▼</span>

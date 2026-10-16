@@ -18,7 +18,7 @@ export function PostGallery({ images }: { images: ImageResponse[] }) {
             key={image.id}
             type="button"
             onClick={() => setOpenIndex(index)}
-            className="overflow-hidden rounded-md focus:outline-none focus:ring-2 focus:ring-green-600"
+            className="overflow-hidden rounded-lg focus:outline-none focus:ring-2 focus:ring-leaf-500"
           >
             <img
               src={resolveImageUrl(image.url)}

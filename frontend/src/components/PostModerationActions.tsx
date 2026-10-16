@@ -23,7 +23,7 @@ export function PostModerationActions({ post }: { post: PostResponse }) {
           type="button"
           disabled={changeStatus.isPending}
           onClick={() => changeStatus.mutate(target.status)}
-          className="rounded border border-blue-300 bg-white px-2 py-1 text-xs font-medium text-blue-800 hover:bg-blue-100 disabled:opacity-50"
+          className="rounded border border-blue-300 bg-cream-50 px-2 py-1 text-xs font-medium text-blue-800 hover:bg-blue-100 disabled:opacity-50"
         >
           {target.label}
         </button>

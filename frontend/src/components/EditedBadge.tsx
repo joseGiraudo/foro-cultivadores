@@ -5,7 +5,7 @@ import { formatDate } from '../lib/format'
 export function EditedBadge({ editedAt }: { editedAt: string | null }) {
   if (!editedAt) return null
   return (
-    <span className="italic text-gray-400" title={`Editado el ${formatDate(editedAt)}`}>
+    <span className="italic text-ink-faint" title={`Editado el ${formatDate(editedAt)}`}>
       · editado
     </span>
   )

@@ -65,14 +65,14 @@ export function CreatePostPage() {
 
   return (
     <div className="mx-auto max-w-2xl">
-      <h1 className="mb-4 text-2xl font-bold text-gray-900">Nueva publicación</h1>
+      <h1 className="mb-4 text-2xl font-semibold text-ink">Nueva publicación</h1>
       <form onSubmit={handleSubmit} className="space-y-4" noValidate>
         <div>
-          <span className="mb-1 block text-sm font-medium text-gray-700">Tipo</span>
+          <span className="field-label">Tipo</span>
           <select
             value={postType}
             onChange={(e) => setPostType(e.target.value as PostType)}
-            className="rounded-md border border-gray-300 px-3 py-2 text-sm"
+            className="select"
           >
             {TYPE_OPTIONS.map((option) => (
               <option key={option.value} value={option.value}>
@@ -80,7 +80,7 @@ export function CreatePostPage() {
               </option>
             ))}
           </select>
-          {selectedHint && <p className="mt-1 text-xs text-gray-500">{selectedHint}</p>}
+          {selectedHint && <p className="mt-1 text-xs text-ink-faint">{selectedHint}</p>}
         </div>
 
         <PostFields
@@ -96,24 +96,16 @@ export function CreatePostPage() {
         {formError && <p className="text-sm text-red-700">{formError}</p>}
 
         <div className="flex gap-3">
-          <button
-            type="submit"
-            disabled={create.isPending}
-            className="rounded-md bg-green-700 px-4 py-2 font-medium text-white hover:bg-green-800 disabled:opacity-50"
-          >
+          <button type="submit" disabled={create.isPending} className="btn-primary">
             {create.isPending ? 'Creando…' : 'Crear publicación'}
           </button>
-          <button
-            type="button"
-            onClick={() => navigate('/')}
-            className="rounded-md border border-gray-300 px-4 py-2 font-medium text-gray-700 hover:bg-gray-100"
-          >
+          <button type="button" onClick={() => navigate('/')} className="btn-secondary">
             Cancelar
           </button>
         </div>
       </form>
 
-      <p className="mt-3 text-xs text-gray-500">
+      <p className="mt-3 text-xs text-ink-faint">
         Después de crear la publicación vas a poder subir imágenes.
       </p>
     </div>

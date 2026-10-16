@@ -51,23 +51,20 @@ export function CommentForm({
         rows={3}
         maxLength={5000}
         autoFocus={autoFocus}
-        className="w-full rounded-md border border-gray-300 p-2 text-sm focus:border-green-600 focus:outline-none"
+        className="input p-2 text-sm"
       />
       {error && <p className="text-sm text-red-700">{error}</p>}
       <div className="flex gap-2">
         <button
           type="submit"
           disabled={submitting || content.trim().length === 0}
-          className="rounded-md bg-green-700 px-3 py-1.5 text-sm font-medium text-white hover:bg-green-800 disabled:opacity-50"
+          className="btn-primary px-3 py-1.5 text-sm"
         >
           {submitting ? 'Enviando…' : submitLabel}
         </button>
         {onCancel && (
-          <button
-            type="button"
-            onClick={onCancel}
-            className="rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-100"
-          >
+          <button type="button" onClick={onCancel} className="btn-secondary px-3 py-1.5 text-sm">
+
             Cancelar
           </button>
         )}

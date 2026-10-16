@@ -10,7 +10,7 @@ export function SavedPostsPage() {
 
   return (
     <div>
-      <h1 className="mb-4 text-2xl font-bold text-gray-900">Guardados</h1>
+      <h1 className="mb-4 text-2xl font-semibold text-ink">Guardados</h1>
 
       {isLoading && <Loading />}
       {isError && <ErrorState error={error} onRetry={refetch} />}

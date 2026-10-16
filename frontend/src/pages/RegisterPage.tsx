@@ -63,17 +63,16 @@ export function RegisterPage() {
     }
   }
 
+  // Base `.input`; en error, las utilidades sueltas ganan (utilities > components en v4).
   const inputClass = (field: string) =>
-    `w-full rounded-md border px-3 py-2 focus:outline-none ${
-      fieldErrors[field] ? 'border-red-400 focus:border-red-500' : 'border-gray-300 focus:border-green-600'
-    }`
+    `input ${fieldErrors[field] ? 'border-red-400 focus:border-red-500' : ''}`
 
   return (
     <div className="mx-auto max-w-sm">
-      <h1 className="mb-4 text-2xl font-bold text-gray-900">Registro</h1>
+      <h1 className="mb-4 text-2xl font-semibold text-ink">Registro</h1>
       <form onSubmit={handleSubmit} className="space-y-4" noValidate>
         <label className="block">
-          <span className="mb-1 block text-sm font-medium text-gray-700">Usuario</span>
+          <span className="field-label">Usuario</span>
           <input
             type="text"
             value={username}
@@ -84,7 +83,7 @@ export function RegisterPage() {
           {fieldErrors.username && <p className="mt-1 text-sm text-red-700">{fieldErrors.username}</p>}
         </label>
         <label className="block">
-          <span className="mb-1 block text-sm font-medium text-gray-700">Email</span>
+          <span className="field-label">Email</span>
           <input
             type="email"
             value={email}
@@ -95,7 +94,7 @@ export function RegisterPage() {
           {fieldErrors.email && <p className="mt-1 text-sm text-red-700">{fieldErrors.email}</p>}
         </label>
         <label className="block">
-          <span className="mb-1 block text-sm font-medium text-gray-700">Contraseña</span>
+          <span className="field-label">Contraseña</span>
           <input
             type="password"
             value={password}
@@ -108,18 +107,14 @@ export function RegisterPage() {
 
         {formError && <p className="text-sm text-red-700">{formError}</p>}
 
-        <button
-          type="submit"
-          disabled={submitting}
-          className="w-full rounded-md bg-green-700 px-4 py-2 font-medium text-white hover:bg-green-800 disabled:opacity-50"
-        >
+        <button type="submit" disabled={submitting} className="btn-primary w-full">
           {submitting ? 'Creando cuenta…' : 'Crear cuenta'}
         </button>
       </form>
 
-      <p className="mt-4 text-sm text-gray-600">
+      <p className="mt-4 text-sm text-ink-soft">
         ¿Ya tenés cuenta?{' '}
-        <Link to="/login" className="font-medium text-green-700 hover:underline">
+        <Link to="/login" className="font-semibold text-leaf-700 hover:underline">
           Ingresá
         </Link>
       </p>

@@ -24,19 +24,19 @@ export function PostFields({
   return (
     <>
       <label className="block">
-        <span className="mb-1 block text-sm font-medium text-gray-700">Título</span>
+        <span className="field-label">Título</span>
         <input
           type="text"
           value={title}
           onChange={(e) => onTitleChange(e.target.value)}
           maxLength={150}
-          className="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-green-600 focus:outline-none"
+          className="input"
         />
         {fieldErrors.title && <p className="mt-1 text-sm text-red-700">{fieldErrors.title}</p>}
       </label>
 
       <div>
-        <span className="mb-1 block text-sm font-medium text-gray-700">Categorías (1 a 3)</span>
+        <span className="field-label">Categorías (1 a 3)</span>
         <CategoryPicker selected={categoryIds} onChange={onCategoriesChange} />
         {fieldErrors.categoryIds && (
           <p className="mt-1 text-sm text-red-700">{fieldErrors.categoryIds}</p>
@@ -44,7 +44,7 @@ export function PostFields({
       </div>
 
       <div>
-        <span className="mb-1 block text-sm font-medium text-gray-700">Contenido (Markdown)</span>
+        <span className="field-label">Contenido (Markdown)</span>
         <MarkdownEditor value={content} onChange={onContentChange} />
         {fieldErrors.content && <p className="mt-1 text-sm text-red-700">{fieldErrors.content}</p>}
       </div>

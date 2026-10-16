@@ -74,3 +74,36 @@
     font-family: var(--font-display);
   }
 }
+
+@layer components {
+  /* Primitivas reutilizables del sistema de diseño. Las utilidades sueltas
+     (p. ej. border-red-400 en un input con error) ganan sobre estas clases por
+     el orden de capas de Tailwind v4 (utilities > components). */
+  .input {
+    @apply w-full rounded-lg border border-sand-200 bg-cream-50 px-3 py-2 text-ink shadow-soft transition focus:border-leaf-400 focus:outline-none;
+  }
+
+  .field-label {
+    @apply mb-1 block text-sm font-semibold text-ink;
+  }
+
+  .select {
+    @apply rounded-lg border border-sand-200 bg-cream-50 px-3 py-2 text-sm text-ink shadow-soft transition focus:border-leaf-400 focus:outline-none;
+  }
+
+  .btn-primary {
+    @apply rounded-lg bg-leaf-600 px-4 py-2 font-semibold text-cream-50 shadow-soft transition hover:bg-leaf-700 disabled:opacity-50;
+  }
+
+  .btn-secondary {
+    @apply rounded-lg border border-sand-200 px-4 py-2 font-semibold text-ink-soft transition hover:bg-leaf-100 hover:text-leaf-700 disabled:opacity-50;
+  }
+
+  .card {
+    @apply rounded-xl border border-sand-200 bg-cream-100 shadow-soft;
+  }
+
+  .chip {
+    @apply rounded-full bg-cream-50 px-3 py-1 text-sm text-ink-soft ring-1 ring-sand-200;
+  }
+}

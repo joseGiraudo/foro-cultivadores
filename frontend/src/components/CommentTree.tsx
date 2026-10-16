@@ -79,23 +79,23 @@ function CommentItem({ comment, postId, postAuthorId, canComment }: CommentItemP
   return (
     <div
       className={`border-l py-2 pl-3 ${
-        comment.pinned ? 'border-green-500 bg-green-50/60' : 'border-gray-200'
+        comment.pinned ? 'border-leaf-500 bg-leaf-100/50' : 'border-sand-200'
       }`}
       style={{ marginLeft: `calc(${indent} * var(--comment-step))` }}
     >
       {hidden ? (
-        <p className="text-sm italic text-gray-400">
+        <p className="text-sm italic text-ink-faint">
           {comment.status === 'HIDDEN' ? 'Comentario oculto' : 'Comentario eliminado'}
         </p>
       ) : (
         <>
-          <div className="mb-1 flex items-center gap-2 text-xs text-gray-500">
+          <div className="mb-1 flex items-center gap-2 text-xs text-ink-faint">
             {comment.pinned && (
-              <span className="rounded-full bg-green-600 px-2 py-0.5 text-xs font-medium text-white">
+              <span className="rounded-full bg-leaf-600 px-2 py-0.5 text-xs font-medium text-cream-50">
                 📌 Fijado
               </span>
             )}
-            <span className="font-medium text-gray-800">{comment.author.username}</span>
+            <span className="font-semibold text-ink">{comment.author.username}</span>
             <span>{formatDate(comment.createdAt)}</span>
             <EditedBadge editedAt={comment.editedAt} />
             <StatusBadge status={comment.status} />
@@ -111,7 +111,7 @@ function CommentItem({ comment, postId, postAuthorId, canComment }: CommentItemP
             />
           ) : (
             <>
-              <p className="mb-1 whitespace-pre-wrap break-words text-sm text-gray-800">
+              <p className="mb-1 whitespace-pre-wrap break-words text-sm text-ink">
                 {comment.content}
               </p>
               <div className="flex items-center gap-3">
@@ -127,7 +127,7 @@ function CommentItem({ comment, postId, postAuthorId, canComment }: CommentItemP
                   <button
                     type="button"
                     onClick={() => setReplying((value) => !value)}
-                    className="text-xs font-medium text-gray-500 hover:text-gray-800"
+                    className="text-xs font-semibold text-ink-faint hover:text-ink"
                   >
                     Responder
                   </button>
@@ -136,7 +136,7 @@ function CommentItem({ comment, postId, postAuthorId, canComment }: CommentItemP
                   <button
                     type="button"
                     onClick={() => setEditing(true)}
-                    className="text-xs font-medium text-gray-500 hover:text-gray-800"
+                    className="text-xs font-semibold text-ink-faint hover:text-ink"
                   >
                     Editar
                   </button>
@@ -156,7 +156,7 @@ function CommentItem({ comment, postId, postAuthorId, canComment }: CommentItemP
                     type="button"
                     onClick={() => pin.mutate({ commentId: comment.id, next: !comment.pinned })}
                     disabled={pin.isPending}
-                    className="text-xs font-medium text-green-700 hover:text-green-900 disabled:opacity-50"
+                    className="text-xs font-semibold text-leaf-700 hover:underline disabled:opacity-50"
                   >
                     {comment.pinned ? 'Desfijar' : 'Fijar'}
                   </button>
@@ -202,7 +202,7 @@ interface CommentTreeProps {
 
 export function CommentTree({ comments, postId, postAuthorId, canComment }: CommentTreeProps) {
   if (comments.length === 0) {
-    return <p className="text-sm text-gray-500">Todavía no hay comentarios.</p>
+    return <p className="text-sm text-ink-faint">Todavía no hay comentarios.</p>
   }
   return (
     <div>

@@ -33,14 +33,14 @@ export function ModerationPage() {
 
   return (
     <div>
-      <h1 className="mb-4 text-2xl font-bold text-gray-900">Moderación</h1>
-      <p className="mb-4 text-sm text-gray-600">
+      <h1 className="mb-4 text-2xl font-semibold text-ink">Moderación</h1>
+      <p className="mb-4 text-sm text-ink-soft">
         Revisá publicaciones por estado. Entrá al detalle para ocultar, restaurar o eliminar
         (también podés moderar los comentarios desde ahí).
       </p>
 
       <select
-        className="mb-4 rounded-md border border-gray-300 px-3 py-2 text-sm"
+        className="select mb-4"
         value={status}
         onChange={(e) => {
           setStatus(e.target.value as '' | ContentStatus)

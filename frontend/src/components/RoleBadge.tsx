@@ -8,8 +8,8 @@ const LABELS: Record<Role, string> = {
 }
 
 const STYLES: Record<Role, string> = {
-  USER: 'bg-gray-100 text-gray-700',
-  CONTRIBUTOR: 'bg-green-100 text-green-800',
+  USER: 'bg-sand-200 text-bark-700',
+  CONTRIBUTOR: 'bg-leaf-100 text-leaf-700',
   MODERATOR: 'bg-blue-100 text-blue-800',
   ADMIN: 'bg-purple-100 text-purple-800',
 }

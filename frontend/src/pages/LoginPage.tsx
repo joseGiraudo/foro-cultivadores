@@ -34,45 +34,41 @@ export function LoginPage() {
 
   return (
     <div className="mx-auto max-w-sm">
-      <h1 className="mb-4 text-2xl font-bold text-gray-900">Ingresar</h1>
+      <h1 className="mb-4 text-2xl font-semibold text-ink">Ingresar</h1>
       <form onSubmit={handleSubmit} className="space-y-4">
         <label className="block">
-          <span className="mb-1 block text-sm font-medium text-gray-700">Usuario</span>
+          <span className="field-label">Usuario</span>
           <input
             type="text"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
             autoComplete="username"
             required
-            className="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-green-600 focus:outline-none"
+            className="input"
           />
         </label>
         <label className="block">
-          <span className="mb-1 block text-sm font-medium text-gray-700">Contraseña</span>
+          <span className="field-label">Contraseña</span>
           <input
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             autoComplete="current-password"
             required
-            className="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-green-600 focus:outline-none"
+            className="input"
           />
         </label>
 
         {error && <p className="text-sm text-red-700">{error}</p>}
 
-        <button
-          type="submit"
-          disabled={submitting}
-          className="w-full rounded-md bg-green-700 px-4 py-2 font-medium text-white hover:bg-green-800 disabled:opacity-50"
-        >
+        <button type="submit" disabled={submitting} className="btn-primary w-full">
           {submitting ? 'Ingresando…' : 'Ingresar'}
         </button>
       </form>
 
-      <p className="mt-4 text-sm text-gray-600">
+      <p className="mt-4 text-sm text-ink-soft">
         ¿No tenés cuenta?{' '}
-        <Link to="/register" className="font-medium text-green-700 hover:underline">
+        <Link to="/register" className="font-semibold text-leaf-700 hover:underline">
           Registrate
         </Link>
       </p>

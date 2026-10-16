@@ -13,21 +13,21 @@ function urlTransform(url: string): string {
 
 // Estilos mínimos por elemento (no usamos @tailwindcss/typography).
 const components: Components = {
-  h1: (props) => <h1 className="mb-3 mt-5 text-2xl font-bold text-gray-900" {...props} />,
-  h2: (props) => <h2 className="mb-2 mt-5 text-xl font-bold text-gray-900" {...props} />,
-  h3: (props) => <h3 className="mb-2 mt-4 text-lg font-semibold text-gray-900" {...props} />,
-  p: (props) => <p className="my-3 leading-relaxed text-gray-800" {...props} />,
+  h1: (props) => <h1 className="mb-3 mt-5 text-2xl font-bold text-ink" {...props} />,
+  h2: (props) => <h2 className="mb-2 mt-5 text-xl font-bold text-ink" {...props} />,
+  h3: (props) => <h3 className="mb-2 mt-4 text-lg font-semibold text-ink" {...props} />,
+  p: (props) => <p className="my-3 leading-relaxed text-ink" {...props} />,
   a: (props) => (
-    <a className="text-green-700 underline" target="_blank" rel="noopener noreferrer" {...props} />
+    <a className="text-leaf-700 underline" target="_blank" rel="noopener noreferrer" {...props} />
   ),
-  ul: (props) => <ul className="my-3 list-disc space-y-1 pl-6 text-gray-800" {...props} />,
-  ol: (props) => <ol className="my-3 list-decimal space-y-1 pl-6 text-gray-800" {...props} />,
+  ul: (props) => <ul className="my-3 list-disc space-y-1 pl-6 text-ink" {...props} />,
+  ol: (props) => <ol className="my-3 list-decimal space-y-1 pl-6 text-ink" {...props} />,
   blockquote: (props) => (
-    <blockquote className="my-3 border-l-4 border-gray-300 pl-4 italic text-gray-600" {...props} />
+    <blockquote className="my-3 border-l-4 border-sand-300 pl-4 italic text-ink-soft" {...props} />
   ),
-  code: (props) => <code className="rounded bg-gray-100 px-1 py-0.5 text-sm" {...props} />,
+  code: (props) => <code className="rounded bg-sand-200 px-1 py-0.5 text-sm" {...props} />,
   pre: (props) => (
-    <pre className="my-3 overflow-x-auto rounded-md bg-gray-100 p-3 text-sm" {...props} />
+    <pre className="my-3 overflow-x-auto rounded-md bg-sand-200 p-3 text-sm" {...props} />
   ),
   img: (props) => (
     <img className="my-3 max-w-full rounded-md" loading="lazy" alt={props.alt ?? ''} {...props} />
@@ -39,15 +39,15 @@ const components: Components = {
       <table className="w-full border-collapse text-sm" {...props} />
     </div>
   ),
-  th: (props) => <th className="border border-gray-200 px-3 py-1 text-left font-semibold" {...props} />,
-  td: (props) => <td className="border border-gray-200 px-3 py-1" {...props} />,
+  th: (props) => <th className="border border-sand-200 px-3 py-1 text-left font-semibold" {...props} />,
+  td: (props) => <td className="border border-sand-200 px-3 py-1" {...props} />,
 }
 
 // Renderiza Markdown crudo del backend. La sanitización (rehype-sanitize) es OBLIGATORIA:
 // es la defensa anti-XSS del front.
 export function MarkdownContent({ content }: { content: string }) {
   return (
-    <div className="break-words text-gray-800">
+    <div className="break-words text-ink">
       <Markdown
         remarkPlugins={[remarkGfm]}
         rehypePlugins={[rehypeSanitize]}

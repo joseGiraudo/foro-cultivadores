@@ -45,10 +45,10 @@ export function EditPostPage() {
 
   const isAuthor = user?.id === post.author.id
   if (!isAuthor) {
-    return <p className="text-gray-600">No podés editar esta publicación.</p>
+    return <p className="text-ink-soft">No podés editar esta publicación.</p>
   }
   if (post.status !== 'ACTIVE') {
-    return <p className="text-gray-600">Esta publicación no está activa y no se puede editar.</p>
+    return <p className="text-ink-soft">Esta publicación no está activa y no se puede editar.</p>
   }
 
   // En artículos/guías las imágenes se referencian en el Markdown; en consultas van en galería.
@@ -99,7 +99,7 @@ export function EditPostPage() {
   return (
     <div className="mx-auto max-w-2xl">
       <div className="mb-4 flex items-center gap-3">
-        <h1 className="text-2xl font-bold text-gray-900">Editar publicación</h1>
+        <h1 className="text-2xl font-semibold text-ink">Editar publicación</h1>
         <PostTypeBadge type={post.postType} />
       </div>
 
@@ -115,20 +115,16 @@ export function EditPostPage() {
         />
 
         {formError && <p className="text-sm text-red-700">{formError}</p>}
-        {saved && <p className="text-sm text-green-700">Cambios guardados.</p>}
+        {saved && <p className="text-sm text-leaf-700">Cambios guardados.</p>}
 
         <div className="flex flex-wrap gap-3">
-          <button
-            type="submit"
-            disabled={update.isPending}
-            className="rounded-md bg-green-700 px-4 py-2 font-medium text-white hover:bg-green-800 disabled:opacity-50"
-          >
+          <button type="submit" disabled={update.isPending} className="btn-primary">
             {update.isPending ? 'Guardando…' : 'Guardar cambios'}
           </button>
           <button
             type="button"
             onClick={() => navigate(`/posts/${post.id}`)}
-            className="rounded-md border border-gray-300 px-4 py-2 font-medium text-gray-700 hover:bg-gray-100"
+            className="btn-secondary"
           >
             Ver publicación
           </button>
@@ -136,7 +132,7 @@ export function EditPostPage() {
             type="button"
             onClick={handleDelete}
             disabled={changeStatus.isPending}
-            className="ml-auto rounded-md border border-red-300 px-4 py-2 font-medium text-red-700 hover:bg-red-50 disabled:opacity-50"
+            className="ml-auto rounded-lg border border-red-300 px-4 py-2 font-semibold text-red-700 transition hover:bg-red-50 disabled:opacity-50"
           >
             Eliminar
           </button>
@@ -144,8 +140,8 @@ export function EditPostPage() {
       </form>
 
       <section className="mt-8">
-        <h2 className="mb-2 text-lg font-semibold text-gray-900">Imágenes</h2>
-        <p className="mb-3 text-sm text-gray-500">
+        <h2 className="mb-2 text-lg font-semibold text-ink">Imágenes</h2>
+        <p className="mb-3 text-sm text-ink-faint">
           {canInsertImages
             ? 'Subí imágenes y usá "Insertar en el texto" para referenciarlas en el contenido. Acordate de guardar los cambios.'
             : 'En las consultas las imágenes se muestran en galería, en el orden en que las subís.'}

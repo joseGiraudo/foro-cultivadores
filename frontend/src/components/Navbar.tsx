@@ -53,7 +53,7 @@ export function Navbar() {
             </NavLink>
           )}
           <Link
-            to="/me"
+            to={`/users/${user.id}`}
             onClick={close}
             className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition hover:bg-leaf-100"
           >

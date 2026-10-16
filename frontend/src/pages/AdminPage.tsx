@@ -28,10 +28,10 @@ function UserRow({ person, isSelf }: { person: UserResponse; isSelf: boolean }) 
   }
 
   return (
-    <tr className="border-t border-gray-200">
+    <tr className="border-t border-sand-200">
       <td className="px-3 py-2">
-        <div className="font-medium text-gray-900">{person.username}</div>
-        <div className="text-xs text-gray-500">{person.email}</div>
+        <div className="font-semibold text-ink">{person.username}</div>
+        <div className="text-xs text-ink-faint">{person.email}</div>
         {error && <div className="text-xs text-red-700">{error}</div>}
       </td>
       <td className="px-3 py-2">
@@ -42,7 +42,7 @@ function UserRow({ person, isSelf }: { person: UserResponse; isSelf: boolean }) 
             setError(null)
             changeRole.mutate({ id: person.id, role: e.target.value }, { onError })
           }}
-          className="rounded-md border border-gray-300 px-2 py-1 text-sm disabled:opacity-50"
+          className="rounded-lg border border-sand-200 bg-cream-50 px-2 py-1 text-sm text-ink disabled:opacity-50"
         >
           {ROLES.map((role) => (
             <option key={role} value={role}>
@@ -60,9 +60,9 @@ function UserRow({ person, isSelf }: { person: UserResponse; isSelf: boolean }) 
             const next: UserStatus = suspended ? 'ACTIVE' : 'SUSPENDED'
             changeStatus.mutate({ id: person.id, status: next }, { onError })
           }}
-          className={`rounded-md px-3 py-1 text-sm font-medium disabled:opacity-50 ${
+          className={`rounded-lg px-3 py-1 text-sm font-semibold transition disabled:opacity-50 ${
             suspended
-              ? 'bg-green-700 text-white hover:bg-green-800'
+              ? 'bg-leaf-600 text-cream-50 hover:bg-leaf-700'
               : 'border border-red-300 text-red-700 hover:bg-red-50'
           }`}
         >
@@ -84,11 +84,11 @@ function UsersSection() {
     page,
   })
 
-  const selectClass = 'rounded-md border border-gray-300 px-3 py-2 text-sm'
+  const selectClass = 'select'
 
   return (
     <section className="mb-10">
-      <h2 className="mb-3 text-lg font-semibold text-gray-900">Usuarios</h2>
+      <h2 className="mb-3 text-lg font-semibold text-ink">Usuarios</h2>
       <div className="mb-3 flex gap-3">
         <select
           className={selectClass}
@@ -127,9 +127,9 @@ function UsersSection() {
           {data.content.length === 0 ? (
             <EmptyState message="No hay usuarios con ese filtro." />
           ) : (
-            <div className="overflow-x-auto rounded-md border border-gray-200 bg-white">
+            <div className="overflow-x-auto rounded-xl border border-sand-200 bg-cream-100 shadow-soft">
               <table className="w-full text-left text-sm">
-                <thead className="bg-gray-50 text-xs uppercase text-gray-500">
+                <thead className="bg-cream-50 text-xs uppercase text-ink-faint">
                   <tr>
                     <th className="px-3 py-2">Usuario</th>
                     <th className="px-3 py-2">Rol</th>
@@ -177,12 +177,12 @@ function CategoriesSection() {
 
   return (
     <section>
-      <h2 className="mb-3 text-lg font-semibold text-gray-900">Categorías</h2>
+      <h2 className="mb-3 text-lg font-semibold text-ink">Categorías</h2>
       <div className="mb-4 flex flex-wrap gap-2">
         {categories?.map((category) => (
           <span
             key={category.id}
-            className="rounded-full bg-gray-100 px-3 py-1 text-sm text-gray-700"
+            className="rounded-full bg-sand-200 px-3 py-1 text-sm text-bark-700"
           >
             {category.name}
           </span>
@@ -196,7 +196,7 @@ function CategoriesSection() {
           onChange={(e) => setName(e.target.value)}
           placeholder="Nombre"
           maxLength={50}
-          className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-green-600 focus:outline-none"
+          className="input text-sm"
         />
         <input
           type="text"
@@ -204,13 +204,13 @@ function CategoriesSection() {
           onChange={(e) => setDescription(e.target.value)}
           placeholder="Descripción (opcional)"
           maxLength={300}
-          className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-green-600 focus:outline-none"
+          className="input text-sm"
         />
         {error && <p className="text-sm text-red-700">{error}</p>}
         <button
           type="submit"
           disabled={create.isPending || name.trim().length === 0}
-          className="rounded-md bg-green-700 px-4 py-2 font-medium text-white hover:bg-green-800 disabled:opacity-50"
+          className="btn-primary"
         >
           {create.isPending ? 'Creando…' : 'Crear categoría'}
         </button>
@@ -227,7 +227,7 @@ export function AdminPage() {
 
   return (
     <div>
-      <h1 className="mb-6 text-2xl font-bold text-gray-900">Administración</h1>
+      <h1 className="mb-6 text-2xl font-semibold text-ink">Administración</h1>
       <UsersSection />
       <CategoriesSection />
     </div>

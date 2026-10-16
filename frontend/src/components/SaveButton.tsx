@@ -30,10 +30,10 @@ export function SaveButton({ post }: { post: PostResponse }) {
         onClick={handleClick}
         disabled={save.isPending || isSuspended}
         title={isSuspended ? 'Tu cuenta está suspendida' : undefined}
-        className={`flex items-center gap-1 rounded-md px-3 py-1.5 text-sm font-medium transition disabled:opacity-50 ${
+        className={`flex items-center gap-1 rounded-lg px-3 py-1.5 text-sm font-semibold transition disabled:opacity-50 ${
           saved
-            ? 'border border-green-700 text-green-800 hover:bg-green-50'
-            : 'border border-gray-300 text-gray-700 hover:bg-gray-100'
+            ? 'border border-leaf-600 text-leaf-700 hover:bg-leaf-100'
+            : 'border border-sand-200 text-ink-soft hover:bg-leaf-100 hover:text-leaf-700'
         }`}
       >
         {saved ? '★ Guardado' : '☆ Guardar'}

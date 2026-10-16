@@ -9,7 +9,7 @@ export function RequireAuth({ children }: { children: ReactNode }) {
   const location = useLocation()
 
   if (initializing) {
-    return <p className="text-gray-500">Cargando…</p>
+    return <p className="text-ink-faint">Cargando…</p>
   }
 
   if (!isAuthenticated) {
