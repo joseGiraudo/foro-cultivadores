@@ -1,5 +1,5 @@
 import { useRef, useState, type FormEvent } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { ApiError } from '../api/client'
 import type { UpdateMeInput } from '../api/types'
 import { Avatar } from '../components/Avatar'
@@ -15,6 +15,7 @@ export function MePage() {
   const { user } = useAuth()
   const updateMe = useUpdateMe()
   const toast = useToast()
+  const navigate = useNavigate()
 
   // La ruta está bajo RequireAuth, así que user no debería ser null; guard defensivo.
   const [bio, setBio] = useState(user?.bio ?? '')
@@ -45,6 +46,7 @@ export function MePage() {
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault()
+    if (!user) return
     setError(null)
     const input: UpdateMeInput = { bio }
     // Solo mandamos datos de comercio si el rol los permite (el backend igual valida con 403).
@@ -57,6 +59,8 @@ export function MePage() {
     try {
       await updateMe.mutateAsync(input)
       toast.success('Perfil actualizado.')
+      // Al guardar salimos del editor hacia el perfil público.
+      navigate(`/users/${user.username}`)
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'No se pudo guardar el perfil.')
     }

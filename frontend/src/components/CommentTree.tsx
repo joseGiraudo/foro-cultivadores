@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import type { CommentResponse } from '../api/types'
 import { useAuth } from '../auth/useAuth'
 import {
@@ -104,8 +105,13 @@ function CommentItem({ comment, postId, postAuthorId, canComment }: CommentItemP
                 📌 Fijado
               </span>
             )}
-            <Avatar name={comment.author.username} src={comment.author.avatarUrl} size="xs" />
-            <span className="font-semibold text-ink">{comment.author.username}</span>
+            <Link
+              to={`/users/${comment.author.username}`}
+              className="flex items-center gap-2 transition hover:text-leaf-700"
+            >
+              <Avatar name={comment.author.username} src={comment.author.avatarUrl} size="xs" />
+              <span className="font-semibold text-ink">{comment.author.username}</span>
+            </Link>
             <span>{formatDate(comment.createdAt)}</span>
             <EditedBadge editedAt={comment.editedAt} />
             <StatusBadge status={comment.status} />

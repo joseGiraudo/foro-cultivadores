@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import type { PostSummaryResponse } from '../api/types'
 import { formatDate, resolveImageUrl } from '../lib/format'
 import { Avatar } from './Avatar'
@@ -8,6 +8,16 @@ import { RoleBadge } from './RoleBadge'
 import { StatusBadge } from './StatusBadge'
 
 export function PostCard({ post }: { post: PostSummaryResponse }) {
+  const navigate = useNavigate()
+
+  // La tarjeta entera es un <Link> al post, así que el autor no puede ser otro <a> anidado:
+  // interceptamos el click (y Enter) para navegar al perfil sin disparar el link del post.
+  function goToAuthor(e: React.SyntheticEvent) {
+    e.preventDefault()
+    e.stopPropagation()
+    navigate(`/users/${post.author.username}`)
+  }
+
   return (
     <Link
       to={`/posts/${post.id}`}
@@ -34,7 +44,15 @@ export function PostCard({ post }: { post: PostSummaryResponse }) {
         <h2 className="truncate text-lg font-semibold text-ink">{post.title}</h2>
         <p className="line-clamp-2 text-sm text-ink-soft">{post.excerpt}</p>
         <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-ink-faint">
-          <span className="flex items-center gap-1">
+          <span
+            role="link"
+            tabIndex={0}
+            onClick={goToAuthor}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') goToAuthor(e)
+            }}
+            className="flex cursor-pointer items-center gap-1 transition hover:text-leaf-700"
+          >
             <Avatar name={post.author.username} src={post.author.avatarUrl} size="xs" />
             {post.author.username}
             <RoleBadge role={post.author.role} />

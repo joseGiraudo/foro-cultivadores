@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { Avatar } from '../components/Avatar'
 import { FollowButton } from '../components/FollowButton'
@@ -24,8 +24,24 @@ export function ProfilePage() {
 
   const { data: profile, isLoading, isError, error, refetch } = useUserByUsername(username ?? '')
   const [page, setPage] = useState(0)
+  const [zoomed, setZoomed] = useState(false)
   // Los posts del autor se filtran por id; esperamos a tener el perfil cargado.
   const { data: posts } = usePosts({ authorId: profile?.id, page }, { enabled: !!profile })
+
+  // Cerrar el visor del avatar con Escape y bloquear el scroll del fondo mientras está abierto.
+  useEffect(() => {
+    if (!zoomed) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setZoomed(false)
+    }
+    document.addEventListener('keydown', onKey)
+    const prevOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.removeEventListener('keydown', onKey)
+      document.body.style.overflow = prevOverflow
+    }
+  }, [zoomed])
 
   if (isLoading) return <Loading />
   if (isError) return <ErrorState error={error} onRetry={refetch} />
@@ -39,6 +55,30 @@ export function ProfilePage() {
 
   return (
     <div>
+      {zoomed && profile.avatarUrl && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="Foto de perfil"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
+          onClick={() => setZoomed(false)}
+        >
+          <button
+            type="button"
+            onClick={() => setZoomed(false)}
+            aria-label="Cerrar"
+            className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-2xl leading-none text-white hover:bg-white/20"
+          >
+            ×
+          </button>
+          <img
+            src={resolveImageUrl(profile.avatarUrl)}
+            alt={profile.username}
+            className="max-h-[85vh] max-w-full rounded-lg object-contain"
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      )}
       <header
         className={`mb-6 overflow-hidden rounded-xl border bg-cream-100 shadow-soft ${
           isPro ? 'border-leaf-300 ring-1 ring-leaf-200' : 'border-sand-200'
@@ -58,12 +98,28 @@ export function ProfilePage() {
         <div className="px-4 pb-5 sm:px-6">
           <div className="-mt-10 flex flex-col gap-4 sm:-mt-12 sm:flex-row sm:items-end sm:justify-between">
             <div className="flex items-end gap-4">
-              <Avatar
-                name={profile.username}
-                src={profile.avatarUrl}
-                size="lg"
-                className="ring-4 ring-cream-100"
-              />
+              {profile.avatarUrl ? (
+                <button
+                  type="button"
+                  onClick={() => setZoomed(true)}
+                  aria-label="Ampliar foto de perfil"
+                  className="rounded-full focus:outline-none focus:ring-2 focus:ring-leaf-500"
+                >
+                  <Avatar
+                    name={profile.username}
+                    src={profile.avatarUrl}
+                    size="lg"
+                    className="cursor-pointer ring-4 ring-cream-100 transition hover:opacity-90"
+                  />
+                </button>
+              ) : (
+                <Avatar
+                  name={profile.username}
+                  src={profile.avatarUrl}
+                  size="lg"
+                  className="ring-4 ring-cream-100"
+                />
+              )}
               <div className="pb-1">
                 <div className="flex flex-wrap items-center gap-2">
                   <h1 className="text-2xl font-semibold text-ink">{profile.username}</h1>

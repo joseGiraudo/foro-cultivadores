@@ -1,4 +1,5 @@
 import { Link, useParams } from 'react-router-dom'
+import { Avatar } from '../components/Avatar'
 import { CommentForm } from '../components/CommentForm'
 import { CommentTree } from '../components/CommentTree'
 import { EditedBadge } from '../components/EditedBadge'
@@ -67,8 +68,9 @@ export function PostDetailPage() {
         <div className="mb-4 flex flex-wrap items-center gap-3 text-sm text-ink-faint">
           <Link
             to={`/users/${post.author.username}`}
-            className="flex items-center gap-1 hover:underline"
+            className="flex items-center gap-1.5 hover:text-leaf-700"
           >
+            <Avatar name={post.author.username} src={post.author.avatarUrl} size="xs" />
             {post.author.username}
             <RoleBadge role={post.author.role} />
           </Link>
