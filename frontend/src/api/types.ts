@@ -175,17 +175,46 @@ export interface UpdateMeInput {
   location?: string
 }
 
-export type NotificationType = 'COMMENT_ON_POST' | 'REPLY_TO_COMMENT'
+export type NotificationType =
+  | 'COMMENT_ON_POST'
+  | 'REPLY_TO_COMMENT'
+  | 'CONTRIBUTOR_REQUEST_APPROVED'
+  | 'CONTRIBUTOR_REQUEST_REJECTED'
 
 // Notificación in-app. actorUsername y postTitle son snapshots (point-in-time) del backend.
+// postId/postTitle son null en notificaciones que no nacen de un post (p. ej. resultado de petición).
 export interface NotificationResponse {
   id: number
   type: NotificationType
   actorUserId: number
   actorUsername: string
-  postId: number
-  postTitle: string
+  postId: number | null
+  postTitle: string | null
   commentId: number | null
   read: boolean
   createdAt: string
+}
+
+export type ContributorRequestStatus = 'PENDING' | 'APPROVED' | 'REJECTED'
+
+// Petición para ser CONTRIBUTOR (Grow). La crea un USER; la resuelve el staff (MODERATOR+).
+export interface ContributorRequestResponse {
+  id: number
+  requester: {
+    id: number
+    username: string
+    role: Role
+    avatarUrl: string | null
+  }
+  message: string
+  contact: string
+  status: ContributorRequestStatus
+  createdAt: string
+  resolvedAt: string | null
+  resolvedBy: { id: number; username: string } | null
+}
+
+export interface CreateContributorRequestInput {
+  message: string
+  contact: string
 }

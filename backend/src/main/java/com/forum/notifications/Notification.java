@@ -36,10 +36,12 @@ class Notification {
     @Column(nullable = false, length = 30)
     private NotificationType type;
 
-    @Column(name = "post_id", nullable = false)
+    // post_id/post_title son opcionales: las notificaciones que no nacen de un post (p. ej. el
+    // resultado de una petición de contributor) las dejan en null.
+    @Column(name = "post_id")
     private Long postId;
 
-    @Column(name = "post_title", nullable = false, length = 150)
+    @Column(name = "post_title", length = 150)
     private String postTitle;
 
     @Column(name = "comment_id")
@@ -66,6 +68,11 @@ class Notification {
         this.commentId = commentId;
         this.read = false;
         this.createdAt = Instant.now();
+    }
+
+    /** Notificación sin post asociado (p. ej. el resultado de una petición de contributor). */
+    Notification(Long recipientUserId, Long actorUserId, String actorUsername, NotificationType type) {
+        this(recipientUserId, actorUserId, actorUsername, type, null, null, null);
     }
 
     Long getId() {

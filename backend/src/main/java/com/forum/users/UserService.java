@@ -1,5 +1,6 @@
 package com.forum.users;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -115,6 +116,22 @@ public class UserService {
         return toResponse(target, true, admin);
     }
 
+    /**
+     * Promueve un usuario común a CONTRIBUTOR. A diferencia de {@link #changeRole} (admin-only),
+     * este salto acotado lo puede ejecutar cualquier integrante del staff (MODERATOR+): es el camino
+     * por el que se aprueba una petición de contributor. Solo aplica a usuarios con rol USER.
+     */
+    @Transactional
+    public User promoteToContributor(AuthUser staff, Long targetId) {
+        staff.ensureCanWrite();
+        User target = getEntityById(targetId);
+        if (target.getRole() != Role.USER) {
+            throw ApiException.conflict("Solo se puede promover a usuarios comunes");
+        }
+        target.setRole(Role.CONTRIBUTOR);
+        return target;
+    }
+
     @Transactional
     public UserResponse changeStatus(AuthUser admin, Long targetId, UserStatus status) {
         admin.ensureCanWrite();
@@ -180,6 +197,16 @@ public class UserService {
     public User getEntityById(Long id) {
         return userRepository.findById(id)
                 .orElseThrow(() -> ApiException.notFound("Usuario no encontrado"));
+    }
+
+    /**
+     * Carga varios usuarios por id en un mapa id→User. Pensado para que otros módulos resuelvan
+     * en lote los datos de usuarios de una lista (evita N+1).
+     */
+    @Transactional(readOnly = true)
+    public Map<Long, User> getEntitiesByIds(Collection<Long> ids) {
+        return userRepository.findAllById(ids).stream()
+                .collect(Collectors.toMap(User::getId, Function.identity()));
     }
 
     /** Busca un usuario por username (usado por el seeder de contenido en perfil dev). */

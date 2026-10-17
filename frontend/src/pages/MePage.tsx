@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { ApiError } from '../api/client'
 import type { UpdateMeInput } from '../api/types'
 import { Avatar } from '../components/Avatar'
+import { BecomeContributorSection } from '../components/BecomeContributorSection'
 import { MarkdownEditor } from '../components/MarkdownEditor'
 import { RoleBadge } from '../components/RoleBadge'
 import { useAuth } from '../auth/useAuth'
@@ -81,6 +82,8 @@ export function MePage() {
           <p className="mt-1 text-sm text-ink-faint">{user.email}</p>
         </div>
       </div>
+
+      <BecomeContributorSection />
 
       <section className="mb-6 space-y-4 rounded-xl border border-sand-200 bg-cream-100 p-4 shadow-soft sm:p-5">
         <h2 className="font-display text-lg font-semibold text-ink">Imágenes</h2>

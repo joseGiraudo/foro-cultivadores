@@ -3,6 +3,7 @@ import { Navbar } from './components/Navbar'
 import { RequireAuth } from './components/RequireAuth'
 import { SuspendedBanner } from './components/SuspendedBanner'
 import { AdminPage } from './pages/AdminPage'
+import { ContributorRequestsPage } from './pages/ContributorRequestsPage'
 import { CreatePostPage } from './pages/CreatePostPage'
 import { EditPostPage } from './pages/EditPostPage'
 import { FollowListPage } from './pages/FollowListPage'
@@ -77,6 +78,14 @@ export default function App() {
             element={
               <RequireAuth>
                 <ModerationPage />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/contributor-requests"
+            element={
+              <RequireAuth>
+                <ContributorRequestsPage />
               </RequireAuth>
             }
           />

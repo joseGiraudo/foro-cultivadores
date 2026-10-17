@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { type ReactNode, useState } from 'react'
 import { Link } from 'react-router-dom'
 import type { NotificationResponse } from '../api/types'
 import { Avatar } from '../components/Avatar'
@@ -11,16 +11,42 @@ import {
 } from '../hooks/useNotifications'
 import { formatDate } from '../lib/format'
 
-function actionText(type: NotificationResponse['type']): string {
-  return type === 'REPLY_TO_COMMENT' ? 'respondió tu comentario en' : 'comentó tu publicación'
+// Destino del link y texto según el tipo. Las de contributor no tienen post → van a /me.
+function notificationView(n: NotificationResponse): { to: string; body: ReactNode } {
+  switch (n.type) {
+    case 'REPLY_TO_COMMENT':
+      return {
+        to: `/posts/${n.postId}`,
+        body: (
+          <>
+            respondió tu comentario en <span className="font-semibold">«{n.postTitle}»</span>
+          </>
+        ),
+      }
+    case 'CONTRIBUTOR_REQUEST_APPROVED':
+      return { to: '/me', body: <>aprobó tu solicitud para ser Grow 🌿</> }
+    case 'CONTRIBUTOR_REQUEST_REJECTED':
+      return { to: '/me', body: <>rechazó tu solicitud para ser Grow</> }
+    case 'COMMENT_ON_POST':
+    default:
+      return {
+        to: `/posts/${n.postId}`,
+        body: (
+          <>
+            comentó tu publicación <span className="font-semibold">«{n.postTitle}»</span>
+          </>
+        ),
+      }
+  }
 }
 
 function NotificationItem({ notification }: { notification: NotificationResponse }) {
   const markRead = useMarkNotificationRead()
+  const { to, body } = notificationView(notification)
 
   return (
     <Link
-      to={`/posts/${notification.postId}`}
+      to={to}
       onClick={() => {
         if (!notification.read) markRead.mutate(notification.id)
       }}
@@ -31,9 +57,7 @@ function NotificationItem({ notification }: { notification: NotificationResponse
       <Avatar name={notification.actorUsername} size="sm" />
       <div className="min-w-0 flex-1">
         <p className="text-sm text-ink">
-          <span className="font-semibold">{notification.actorUsername}</span>{' '}
-          {actionText(notification.type)}{' '}
-          <span className="font-semibold">«{notification.postTitle}»</span>
+          <span className="font-semibold">{notification.actorUsername}</span> {body}
         </p>
         <p className="mt-0.5 text-xs text-ink-faint">{formatDate(notification.createdAt)}</p>
       </div>

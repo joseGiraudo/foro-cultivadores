@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/useAuth'
+import { useContributorPendingCount } from '../hooks/useContributorRequests'
 import { useUnreadCount } from '../hooks/useNotifications'
 import { isAtLeast } from '../lib/roles'
 import { Avatar } from './Avatar'
@@ -12,6 +13,8 @@ export function Navbar() {
   const [open, setOpen] = useState(false)
   const { data: unread } = useUnreadCount()
   const unreadCount = unread?.count ?? 0
+  const { data: pending } = useContributorPendingCount()
+  const pendingRequests = pending?.count ?? 0
 
   const linkClass = ({ isActive }: { isActive: boolean }) =>
     `px-3 py-2 rounded-lg text-sm font-semibold transition ${
@@ -59,6 +62,18 @@ export function Navbar() {
           {isAtLeast(user.role, 'MODERATOR') && (
             <NavLink to="/moderation" className={linkClass} onClick={close}>
               Moderación
+            </NavLink>
+          )}
+          {isAtLeast(user.role, 'MODERATOR') && (
+            <NavLink to="/contributor-requests" className={linkClass} onClick={close}>
+              <span className="inline-flex items-center gap-1.5">
+                Peticiones
+                {pendingRequests > 0 && (
+                  <span className="inline-flex min-w-5 items-center justify-center rounded-full bg-leaf-600 px-1.5 text-xs font-bold text-cream-50">
+                    {pendingRequests > 99 ? '99+' : pendingRequests}
+                  </span>
+                )}
+              </span>
             </NavLink>
           )}
           {isAtLeast(user.role, 'ADMIN') && (

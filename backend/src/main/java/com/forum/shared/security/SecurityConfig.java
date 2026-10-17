@@ -53,6 +53,11 @@ class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/posts/*/comments").permitAll()
                         .requestMatchers(HttpMethod.GET, "/images/*").permitAll()
                         .requestMatchers("/admin/**").hasRole("ADMIN")
+                        // Peticiones de contributor: crear/ver las propias es de cualquier autenticado;
+                        // la bandeja y resolver quedan para el staff (MODERATOR+).
+                        .requestMatchers(HttpMethod.POST, "/contributor-requests").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/contributor-requests/me").authenticated()
+                        .requestMatchers("/contributor-requests/**").hasAnyRole("MODERATOR", "ADMIN")
                         .anyRequest().authenticated())
                 .httpBasic(basic -> basic.authenticationEntryPoint(entryPoint))
                 .exceptionHandling(ex -> ex
