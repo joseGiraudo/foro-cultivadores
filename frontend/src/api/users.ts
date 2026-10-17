@@ -36,3 +36,25 @@ export function getFollowers(id: number, page = 0): Promise<Page<UserResponse>> 
 export function getFollowing(id: number, page = 0): Promise<Page<UserResponse>> {
   return api.get<Page<UserResponse>>(`/users/${id}/following`, { page })
 }
+
+// Imágenes del usuario (multipart campo "file"). Devuelven el perfil propio actualizado.
+// La portada requiere rol suficiente (el backend responde 403 si no).
+export function uploadAvatar(file: File): Promise<UserResponse> {
+  const formData = new FormData()
+  formData.append('file', file)
+  return api.postForm<UserResponse>('/users/me/avatar', formData)
+}
+
+export function deleteAvatar(): Promise<UserResponse> {
+  return api.delete<UserResponse>('/users/me/avatar')
+}
+
+export function uploadCover(file: File): Promise<UserResponse> {
+  const formData = new FormData()
+  formData.append('file', file)
+  return api.postForm<UserResponse>('/users/me/cover', formData)
+}
+
+export function deleteCover(): Promise<UserResponse> {
+  return api.delete<UserResponse>('/users/me/cover')
+}

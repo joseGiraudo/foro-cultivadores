@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react'
+import { useRef, useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { ApiError } from '../api/client'
 import type { UpdateMeInput } from '../api/types'
@@ -6,13 +6,15 @@ import { Avatar } from '../components/Avatar'
 import { MarkdownEditor } from '../components/MarkdownEditor'
 import { RoleBadge } from '../components/RoleBadge'
 import { useAuth } from '../auth/useAuth'
-import { useUpdateMe } from '../hooks/useUsers'
-import { formatDate } from '../lib/format'
+import { useUpdateMe, useUserImageMutations } from '../hooks/useUsers'
+import { formatDate, resolveImageUrl } from '../lib/format'
 import { isAtLeast } from '../lib/roles'
+import { useToast } from '../toast/useToast'
 
 export function MePage() {
   const { user } = useAuth()
   const updateMe = useUpdateMe()
+  const toast = useToast()
 
   // La ruta está bajo RequireAuth, así que user no debería ser null; guard defensivo.
   const [bio, setBio] = useState(user?.bio ?? '')
@@ -21,16 +23,29 @@ export function MePage() {
   const [instagram, setInstagram] = useState(user?.instagram ?? '')
   const [location, setLocation] = useState(user?.location ?? '')
   const [error, setError] = useState<string | null>(null)
-  const [saved, setSaved] = useState(false)
+
+  const images = useUserImageMutations()
+  const avatarInput = useRef<HTMLInputElement>(null)
+  const coverInput = useRef<HTMLInputElement>(null)
 
   if (!user) return null
 
   const isPro = isAtLeast(user.role, 'CONTRIBUTOR')
 
+  function notifyImageError(err: unknown) {
+    if (err instanceof ApiError) {
+      if (err.status === 413) toast.error('La imagen supera el tamaño máximo (5 MB).')
+      else if (err.status === 415) toast.error('Tipo no permitido (usá JPEG, PNG o WebP).')
+      else if (err.status === 403) toast.error('Tu rol no permite subir esta imagen.')
+      else toast.error(err.message)
+    } else {
+      toast.error('No se pudo procesar la imagen.')
+    }
+  }
+
   async function handleSubmit(event: FormEvent) {
     event.preventDefault()
     setError(null)
-    setSaved(false)
     const input: UpdateMeInput = { bio }
     // Solo mandamos datos de comercio si el rol los permite (el backend igual valida con 403).
     if (isPro) {
@@ -41,7 +56,7 @@ export function MePage() {
     }
     try {
       await updateMe.mutateAsync(input)
-      setSaved(true)
+      toast.success('Perfil actualizado.')
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'No se pudo guardar el perfil.')
     }
@@ -50,7 +65,7 @@ export function MePage() {
   return (
     <div className="mx-auto max-w-2xl">
       <div className="mb-6 flex items-center gap-4 rounded-xl border border-sand-200 bg-cream-100 p-4 shadow-soft sm:p-5">
-        <Avatar name={user.username} size="lg" />
+        <Avatar name={user.username} src={user.avatarUrl} size="lg" />
         <div>
           <div className="flex flex-wrap items-center gap-2">
             <h1 className="text-2xl font-semibold text-ink">{user.username}</h1>
@@ -62,6 +77,115 @@ export function MePage() {
           <p className="mt-1 text-sm text-ink-faint">{user.email}</p>
         </div>
       </div>
+
+      <section className="mb-6 space-y-4 rounded-xl border border-sand-200 bg-cream-100 p-4 shadow-soft sm:p-5">
+        <h2 className="font-display text-lg font-semibold text-ink">Imágenes</h2>
+
+        {/* Foto de perfil (cualquier usuario) */}
+        <div className="flex items-center gap-4">
+          <Avatar name={user.username} src={user.avatarUrl} size="md" />
+          <div className="flex flex-wrap gap-2">
+            <input
+              ref={avatarInput}
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0]
+                if (avatarInput.current) avatarInput.current.value = ''
+                if (!file) return
+                images.uploadAvatar.mutate(file, {
+                  onSuccess: () => toast.success('Foto de perfil actualizada.'),
+                  onError: notifyImageError,
+                })
+              }}
+            />
+            <button
+              type="button"
+              onClick={() => avatarInput.current?.click()}
+              disabled={images.uploadAvatar.isPending}
+              className="btn-secondary px-3 py-1.5 text-sm"
+            >
+              {user.avatarUrl ? 'Cambiar foto' : 'Subir foto de perfil'}
+            </button>
+            {user.avatarUrl && (
+              <button
+                type="button"
+                onClick={() => {
+                  images.deleteAvatar.mutate(undefined, {
+                    onSuccess: () => toast.success('Foto de perfil quitada.'),
+                    onError: notifyImageError,
+                  })
+                }}
+                disabled={images.deleteAvatar.isPending}
+                className="rounded-lg px-3 py-1.5 text-sm font-semibold text-red-700 transition hover:bg-red-50 disabled:opacity-50"
+              >
+                Quitar
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Portada (solo Grows) */}
+        {isPro && (
+          <div>
+            <p className="field-label">Portada</p>
+            <div className="mb-2 h-24 overflow-hidden rounded-lg border border-sand-200 sm:h-32">
+              {user.coverUrl ? (
+                <img
+                  src={resolveImageUrl(user.coverUrl)}
+                  alt=""
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <div className="h-full w-full bg-gradient-to-br from-leaf-300 via-leaf-500 to-bark-500" />
+              )}
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <input
+                ref={coverInput}
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0]
+                  if (coverInput.current) coverInput.current.value = ''
+                  if (!file) return
+                  images.uploadCover.mutate(file, {
+                    onSuccess: () => toast.success('Portada actualizada.'),
+                    onError: notifyImageError,
+                  })
+                }}
+              />
+              <button
+                type="button"
+                onClick={() => coverInput.current?.click()}
+                disabled={images.uploadCover.isPending}
+                className="btn-secondary px-3 py-1.5 text-sm"
+              >
+                {user.coverUrl ? 'Cambiar portada' : 'Subir portada'}
+              </button>
+              {user.coverUrl && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    images.deleteCover.mutate(undefined, {
+                      onSuccess: () => toast.success('Portada quitada.'),
+                      onError: notifyImageError,
+                    })
+                  }}
+                  disabled={images.deleteCover.isPending}
+                  className="rounded-lg px-3 py-1.5 text-sm font-semibold text-red-700 transition hover:bg-red-50 disabled:opacity-50"
+                >
+                  Quitar
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+
+        <p className="text-xs text-ink-faint">JPEG, PNG o WebP · hasta 5 MB.</p>
+      </section>
 
       <div className="mb-6 flex flex-wrap gap-2">
         <span className="rounded-full bg-cream-50 px-3 py-1 text-sm text-ink-soft ring-1 ring-sand-200">
@@ -148,7 +272,6 @@ export function MePage() {
         )}
 
         {error && <p className="text-sm text-red-700">{error}</p>}
-        {saved && <p className="text-sm text-leaf-700">Perfil actualizado.</p>}
 
         <div className="flex gap-3">
           <button type="submit" disabled={updateMe.isPending} className="btn-primary">

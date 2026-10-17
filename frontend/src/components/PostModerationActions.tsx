@@ -3,11 +3,13 @@ import { useAuth } from '../auth/useAuth'
 import { useChangePostStatus } from '../hooks/usePostMutations'
 import { isAtLeast } from '../lib/roles'
 import { moderationTargets } from '../lib/moderation'
+import { useToast } from '../toast/useToast'
 
 // Acciones de moderación sobre un post (MODERATOR+). La autorización real la hace el backend.
 export function PostModerationActions({ post }: { post: PostResponse }) {
   const { user } = useAuth()
   const changeStatus = useChangePostStatus(post.id)
+  const toast = useToast()
 
   if (!isAtLeast(user?.role, 'MODERATOR')) return null
 
@@ -22,7 +24,12 @@ export function PostModerationActions({ post }: { post: PostResponse }) {
           key={target.status}
           type="button"
           disabled={changeStatus.isPending}
-          onClick={() => changeStatus.mutate(target.status)}
+          onClick={() =>
+            changeStatus.mutate(target.status, {
+              onSuccess: () => toast.success('Estado de la publicación actualizado.'),
+              onError: () => toast.error('No se pudo cambiar el estado.'),
+            })
+          }
           className="rounded border border-blue-300 bg-cream-50 px-2 py-1 text-xs font-medium text-blue-800 hover:bg-blue-100 disabled:opacity-50"
         >
           {target.label}

@@ -46,6 +46,8 @@ export interface AuthorResponse {
   id: number
   username: string
   role: Role
+  // URL del avatar (o null si usa iniciales).
+  avatarUrl: string | null
 }
 
 // Categoría embebida en un post (solo id + name).
@@ -117,6 +119,8 @@ export interface PostResponse {
 export interface CommentAuthor {
   id: number
   username: string
+  // URL del avatar (o null si usa iniciales).
+  avatarUrl: string | null
 }
 
 // Ítem de la lista plana de comentarios (recorrido en profundidad).
@@ -151,6 +155,9 @@ export interface UserResponse {
   phone: string | null
   instagram: string | null
   location: string | null
+  // URLs de las imágenes del usuario (null si no subió). coverUrl solo lo completan los Grows.
+  avatarUrl: string | null
+  coverUrl: string | null
   role: Role
   status: UserStatus
   followerCount: number

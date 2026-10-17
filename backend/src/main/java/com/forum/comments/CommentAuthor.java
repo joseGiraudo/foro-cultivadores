@@ -2,10 +2,10 @@ package com.forum.comments;
 
 import com.forum.users.User;
 
-/** Autor embebido en las respuestas de comentarios: id y username. */
-record CommentAuthor(Long id, String username) {
+/** Autor embebido en las respuestas de comentarios: id, username y avatar. */
+record CommentAuthor(Long id, String username, String avatarUrl) {
 
     static CommentAuthor of(User user) {
-        return new CommentAuthor(user.getId(), user.getUsername());
+        return new CommentAuthor(user.getId(), user.getUsername(), user.getAvatarUrl());
     }
 }

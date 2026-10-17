@@ -9,6 +9,7 @@ import { ErrorState, Loading } from '../components/states'
 import { useAuth } from '../auth/useAuth'
 import { useChangePostStatus, useUpdatePost } from '../hooks/usePostMutations'
 import { usePost } from '../hooks/usePosts'
+import { useToast } from '../toast/useToast'
 
 export function EditPostPage() {
   const { id } = useParams<{ id: string }>()
@@ -19,13 +20,13 @@ export function EditPostPage() {
   const { data: post, isLoading, isError, error, refetch } = usePost(postId)
   const update = useUpdatePost(postId)
   const changeStatus = useChangePostStatus(postId)
+  const toast = useToast()
 
   const [title, setTitle] = useState('')
   const [categoryIds, setCategoryIds] = useState<number[]>([])
   const [content, setContent] = useState('')
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
   const [formError, setFormError] = useState<string | null>(null)
-  const [saved, setSaved] = useState(false)
 
   // Sembrar el formulario una sola vez por post. Importante: subir/borrar imágenes invalida
   // ['post', id] y refetchea; sin este guard, se perderían las ediciones sin guardar.
@@ -61,7 +62,6 @@ export function EditPostPage() {
   async function handleSubmit(event: FormEvent) {
     event.preventDefault()
     setFormError(null)
-    setSaved(false)
 
     const errors: Record<string, string> = {}
     if (title.trim().length < 5 || title.length > 150) {
@@ -76,7 +76,7 @@ export function EditPostPage() {
     setFieldErrors({})
     try {
       await update.mutateAsync({ title, content, categoryIds })
-      setSaved(true)
+      toast.success('Cambios guardados.')
     } catch (err) {
       if (err instanceof ApiError && err.status === 400 && err.fieldErrors) {
         setFieldErrors(err.fieldErrors)
@@ -90,6 +90,7 @@ export function EditPostPage() {
     if (!window.confirm('¿Eliminar esta publicación? No se puede deshacer.')) return
     try {
       await changeStatus.mutateAsync('DELETED_BY_USER')
+      toast.success('Publicación eliminada.')
       navigate('/', { replace: true })
     } catch (err) {
       setFormError(err instanceof ApiError ? err.message : 'No se pudo eliminar la publicación.')
@@ -115,7 +116,6 @@ export function EditPostPage() {
         />
 
         {formError && <p className="text-sm text-red-700">{formError}</p>}
-        {saved && <p className="text-sm text-leaf-700">Cambios guardados.</p>}
 
         <div className="flex flex-wrap gap-3">
           <button type="submit" disabled={update.isPending} className="btn-primary">

@@ -10,7 +10,7 @@ import { EmptyState, ErrorState, Loading } from '../components/states'
 import { useAuth } from '../auth/useAuth'
 import { usePosts } from '../hooks/usePosts'
 import { useUserByUsername } from '../hooks/useUsers'
-import { formatDate } from '../lib/format'
+import { formatDate, resolveImageUrl } from '../lib/format'
 import { isAtLeast } from '../lib/roles'
 
 // Asegura que la URL tenga protocolo (los usuarios suelen escribir "tugrow.com").
@@ -44,13 +44,26 @@ export function ProfilePage() {
           isPro ? 'border-leaf-300 ring-1 ring-leaf-200' : 'border-sand-200'
         }`}
       >
-        {/* Portada decorativa */}
-        <div className="h-24 bg-gradient-to-br from-leaf-300 via-leaf-500 to-bark-500 sm:h-32" />
+        {/* Portada: foto del usuario si tiene, si no un degradado decorativo. */}
+        {profile.coverUrl ? (
+          <img
+            src={resolveImageUrl(profile.coverUrl)}
+            alt=""
+            className="h-24 w-full object-cover sm:h-36"
+          />
+        ) : (
+          <div className="h-24 bg-gradient-to-br from-leaf-300 via-leaf-500 to-bark-500 sm:h-32" />
+        )}
 
         <div className="px-4 pb-5 sm:px-6">
           <div className="-mt-10 flex flex-col gap-4 sm:-mt-12 sm:flex-row sm:items-end sm:justify-between">
             <div className="flex items-end gap-4">
-              <Avatar name={profile.username} size="lg" className="ring-4 ring-cream-100" />
+              <Avatar
+                name={profile.username}
+                src={profile.avatarUrl}
+                size="lg"
+                className="ring-4 ring-cream-100"
+              />
               <div className="pb-1">
                 <div className="flex flex-wrap items-center gap-2">
                   <h1 className="text-2xl font-semibold text-ink">{profile.username}</h1>

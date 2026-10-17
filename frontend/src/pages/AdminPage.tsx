@@ -13,12 +13,14 @@ import {
 } from '../hooks/useAdmin'
 import { useCategories } from '../hooks/useCategories'
 import { isAtLeast } from '../lib/roles'
+import { useToast } from '../toast/useToast'
 
 const ROLES: Role[] = ['USER', 'CONTRIBUTOR', 'MODERATOR', 'ADMIN']
 
 function UserRow({ person, isSelf }: { person: UserResponse; isSelf: boolean }) {
   const changeRole = useChangeUserRole()
   const changeStatus = useChangeUserStatus()
+  const toast = useToast()
   const [error, setError] = useState<string | null>(null)
 
   const suspended = person.status === 'SUSPENDED'
@@ -40,7 +42,10 @@ function UserRow({ person, isSelf }: { person: UserResponse; isSelf: boolean }) 
           disabled={isSelf || changeRole.isPending}
           onChange={(e) => {
             setError(null)
-            changeRole.mutate({ id: person.id, role: e.target.value }, { onError })
+            changeRole.mutate(
+              { id: person.id, role: e.target.value },
+              { onSuccess: () => toast.success(`Rol de ${person.username} actualizado.`), onError },
+            )
           }}
           className="rounded-lg border border-sand-200 bg-cream-50 px-2 py-1 text-sm text-ink disabled:opacity-50"
         >
@@ -58,7 +63,14 @@ function UserRow({ person, isSelf }: { person: UserResponse; isSelf: boolean }) 
           onClick={() => {
             setError(null)
             const next: UserStatus = suspended ? 'ACTIVE' : 'SUSPENDED'
-            changeStatus.mutate({ id: person.id, status: next }, { onError })
+            changeStatus.mutate(
+              { id: person.id, status: next },
+              {
+                onSuccess: () =>
+                  toast.success(next === 'SUSPENDED' ? 'Usuario suspendido.' : 'Usuario reactivado.'),
+                onError,
+              },
+            )
           }}
           className={`rounded-lg px-3 py-1 text-sm font-semibold transition disabled:opacity-50 ${
             suspended
@@ -154,6 +166,7 @@ function UsersSection() {
 function CategoriesSection() {
   const { data: categories } = useCategories()
   const create = useCreateCategory()
+  const toast = useToast()
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -164,6 +177,7 @@ function CategoriesSection() {
     if (name.trim().length === 0) return
     try {
       await create.mutateAsync({ name, description })
+      toast.success('Categoría creada.')
       setName('')
       setDescription('')
     } catch (err) {

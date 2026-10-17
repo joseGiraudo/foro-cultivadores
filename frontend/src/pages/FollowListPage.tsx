@@ -49,7 +49,7 @@ export function FollowListPage({ mode }: { mode: 'followers' | 'following' }) {
                     to={`/users/${person.username}`}
                     className="flex items-center gap-3 rounded-xl border border-sand-200 bg-cream-100 p-3 shadow-soft transition hover:border-leaf-300 hover:shadow-raised"
                   >
-                    <Avatar name={person.username} size="sm" />
+                    <Avatar name={person.username} src={person.avatarUrl} size="sm" />
                     <div className="flex min-w-0 flex-1 items-center gap-2">
                       <span className="font-semibold text-ink">{person.username}</span>
                       <RoleBadge role={person.role} />

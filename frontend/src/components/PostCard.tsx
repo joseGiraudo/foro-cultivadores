@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import type { PostSummaryResponse } from '../api/types'
 import { formatDate, resolveImageUrl } from '../lib/format'
+import { Avatar } from './Avatar'
 import { EditedBadge } from './EditedBadge'
 import { PostTypeBadge } from './PostTypeBadge'
 import { RoleBadge } from './RoleBadge'
@@ -34,6 +35,7 @@ export function PostCard({ post }: { post: PostSummaryResponse }) {
         <p className="line-clamp-2 text-sm text-ink-soft">{post.excerpt}</p>
         <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-ink-faint">
           <span className="flex items-center gap-1">
+            <Avatar name={post.author.username} src={post.author.avatarUrl} size="xs" />
             {post.author.username}
             <RoleBadge role={post.author.role} />
           </span>

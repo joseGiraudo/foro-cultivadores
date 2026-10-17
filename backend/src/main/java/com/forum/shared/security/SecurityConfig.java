@@ -45,6 +45,7 @@ class SecurityConfig {
                         .requestMatchers("/users/me").authenticated()
                         .requestMatchers(HttpMethod.GET, "/users/*").permitAll()
                         .requestMatchers(HttpMethod.GET, "/users/by-username/*").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/users/*/avatar", "/users/*/cover").permitAll()
                         .requestMatchers(HttpMethod.GET, "/users/*/followers", "/users/*/following").permitAll()
                         .requestMatchers(HttpMethod.GET, "/categories").permitAll()
                         .requestMatchers(HttpMethod.POST, "/categories").hasRole("ADMIN")

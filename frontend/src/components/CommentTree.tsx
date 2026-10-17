@@ -11,6 +11,8 @@ import { useCommentVote } from '../hooks/useVote'
 import { formatDate } from '../lib/format'
 import { moderationTargets } from '../lib/moderation'
 import { isAtLeast } from '../lib/roles'
+import { useToast } from '../toast/useToast'
+import { Avatar } from './Avatar'
 import { CommentForm } from './CommentForm'
 import { EditedBadge } from './EditedBadge'
 import { StatusBadge } from './StatusBadge'
@@ -36,6 +38,7 @@ function CommentItem({ comment, postId, postAuthorId, canComment }: CommentItemP
   const updateComment = useUpdateComment(postId)
   const changeStatus = useChangeCommentStatus(postId)
   const pin = usePinComment(postId)
+  const toast = useToast()
 
   const [replying, setReplying] = useState(false)
   const [editing, setEditing] = useState(false)
@@ -73,7 +76,13 @@ function CommentItem({ comment, postId, postAuthorId, canComment }: CommentItemP
 
   function handleDelete() {
     if (!window.confirm('¿Eliminar tu comentario?')) return
-    changeStatus.mutate({ commentId: comment.id, status: 'DELETED_BY_USER' })
+    changeStatus.mutate(
+      { commentId: comment.id, status: 'DELETED_BY_USER' },
+      {
+        onSuccess: () => toast.success('Comentario eliminado.'),
+        onError: () => toast.error('No se pudo eliminar el comentario.'),
+      },
+    )
   }
 
   return (
@@ -95,6 +104,7 @@ function CommentItem({ comment, postId, postAuthorId, canComment }: CommentItemP
                 📌 Fijado
               </span>
             )}
+            <Avatar name={comment.author.username} src={comment.author.avatarUrl} size="xs" />
             <span className="font-semibold text-ink">{comment.author.username}</span>
             <span>{formatDate(comment.createdAt)}</span>
             <EditedBadge editedAt={comment.editedAt} />
@@ -154,7 +164,16 @@ function CommentItem({ comment, postId, postAuthorId, canComment }: CommentItemP
                 {canPin && (
                   <button
                     type="button"
-                    onClick={() => pin.mutate({ commentId: comment.id, next: !comment.pinned })}
+                    onClick={() =>
+                      pin.mutate(
+                        { commentId: comment.id, next: !comment.pinned },
+                        {
+                          onSuccess: () =>
+                            toast.success(comment.pinned ? 'Comentario desfijado.' : 'Comentario fijado.'),
+                          onError: () => toast.error('No se pudo fijar el comentario.'),
+                        },
+                      )
+                    }
                     disabled={pin.isPending}
                     className="text-xs font-semibold text-leaf-700 hover:underline disabled:opacity-50"
                   >
@@ -166,7 +185,15 @@ function CommentItem({ comment, postId, postAuthorId, canComment }: CommentItemP
                     key={target.status}
                     type="button"
                     disabled={changeStatus.isPending}
-                    onClick={() => changeStatus.mutate({ commentId: comment.id, status: target.status })}
+                    onClick={() =>
+                      changeStatus.mutate(
+                        { commentId: comment.id, status: target.status },
+                        {
+                          onSuccess: () => toast.success('Comentario actualizado.'),
+                          onError: () => toast.error('No se pudo cambiar el estado.'),
+                        },
+                      )
+                    }
                     className="text-xs font-medium text-blue-700 hover:text-blue-900 disabled:opacity-50"
                   >
                     {target.label}

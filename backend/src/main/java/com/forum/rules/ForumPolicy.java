@@ -69,6 +69,10 @@ public class ForumPolicy implements InitializingBean {
         return rules.businessProfileMinRole;
     }
 
+    public Role coverImageMinRole() {
+        return rules.coverImageMinRole;
+    }
+
     public int maxImagesPerPost() {
         return images.maxPerPost;
     }
@@ -106,6 +110,7 @@ public class ForumPolicy implements InitializingBean {
         requireRole(rules.followTargetMinRole, "follow-target-min-role");
         requireRole(rules.moderationMinRole, "moderation-min-role");
         requireRole(rules.businessProfileMinRole, "business-profile-min-role");
+        requireRole(rules.coverImageMinRole, "cover-image-min-role");
         if (images.allowedTypes == null || images.allowedTypes.isEmpty()) {
             throw new IllegalStateException("Falta configurar forum.images.allowed-types");
         }
@@ -157,6 +162,7 @@ public class ForumPolicy implements InitializingBean {
         private Role followTargetMinRole;
         private Role moderationMinRole;
         private Role businessProfileMinRole;
+        private Role coverImageMinRole;
 
         public Map<PostType, Role> getPostCreationMinRole() {
             return postCreationMinRole;
@@ -236,6 +242,14 @@ public class ForumPolicy implements InitializingBean {
 
         public void setBusinessProfileMinRole(Role businessProfileMinRole) {
             this.businessProfileMinRole = businessProfileMinRole;
+        }
+
+        public Role getCoverImageMinRole() {
+            return coverImageMinRole;
+        }
+
+        public void setCoverImageMinRole(Role coverImageMinRole) {
+            this.coverImageMinRole = coverImageMinRole;
         }
     }
 

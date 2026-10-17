@@ -18,7 +18,7 @@ import com.forum.shared.error.ApiException;
  * WebP se normaliza a PNG (sin pérdida) porque Java puro no puede escribir WebP.
  */
 @Component
-class ImageProcessor {
+public class ImageProcessor {
 
     private static final String JPEG = "image/jpeg";
     private static final String PNG = "image/png";
@@ -30,7 +30,7 @@ class ImageProcessor {
         this.policy = policy;
     }
 
-    ProcessedImage process(byte[] input) {
+    public ProcessedImage process(byte[] input) {
         String detected = detectType(input);
         if (detected == null || !policy.allowedImageTypes().contains(detected)) {
             throw ApiException.unsupportedMediaType("El archivo no es una imagen de un tipo permitido");
@@ -86,6 +86,6 @@ class ImageProcessor {
         return null;
     }
 
-    record ProcessedImage(byte[] data, String contentType, String extension) {
+    public record ProcessedImage(byte[] data, String contentType, String extension) {
     }
 }

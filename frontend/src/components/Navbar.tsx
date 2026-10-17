@@ -3,6 +3,7 @@ import { Link, NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/useAuth'
 import { useUnreadCount } from '../hooks/useNotifications'
 import { isAtLeast } from '../lib/roles'
+import { Avatar } from './Avatar'
 import { RoleBadge } from './RoleBadge'
 
 export function Navbar() {
@@ -70,6 +71,7 @@ export function Navbar() {
             onClick={close}
             className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition hover:bg-leaf-100"
           >
+            <Avatar name={user.username} src={user.avatarUrl} size="xs" />
             <span className="font-semibold text-ink">{user.username}</span>
             <RoleBadge role={user.role} />
           </Link>

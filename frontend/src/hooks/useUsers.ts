@@ -1,5 +1,7 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
+  deleteAvatar,
+  deleteCover,
   followUser,
   getFollowers,
   getFollowing,
@@ -7,6 +9,8 @@ import {
   getUserByUsername,
   unfollowUser,
   updateMe,
+  uploadAvatar,
+  uploadCover,
 } from '../api/users'
 import type { UpdateMeInput, UserResponse } from '../api/types'
 import { useAuth } from '../auth/useAuth'
@@ -34,6 +38,23 @@ export function useUpdateMe() {
     mutationFn: (input: UpdateMeInput) => updateMe(input),
     onSuccess: () => refreshMe(),
   })
+}
+
+// Mutaciones de imágenes del perfil propio. Refrescan la sesión (navbar/mi perfil) e invalidan
+// el perfil público cacheado por username.
+export function useUserImageMutations() {
+  const { refreshMe } = useAuth()
+  const qc = useQueryClient()
+  const onSuccess = () => {
+    refreshMe()
+    qc.invalidateQueries({ queryKey: ['user'] })
+  }
+  return {
+    uploadAvatar: useMutation({ mutationFn: (file: File) => uploadAvatar(file), onSuccess }),
+    deleteAvatar: useMutation({ mutationFn: () => deleteAvatar(), onSuccess }),
+    uploadCover: useMutation({ mutationFn: (file: File) => uploadCover(file), onSuccess }),
+    deleteCover: useMutation({ mutationFn: () => deleteCover(), onSuccess }),
+  }
 }
 
 // Seguir/dejar de seguir con actualización optimista sobre el perfil en cache.

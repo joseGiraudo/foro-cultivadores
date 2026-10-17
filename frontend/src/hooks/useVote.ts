@@ -6,6 +6,7 @@ import {
   votePost,
 } from '../api/votes'
 import type { CommentResponse, PostResponse, VoteValue } from '../api/types'
+import { useToast } from '../toast/useToast'
 
 // Aporte de un voto al score. null = sin voto.
 function voteScore(vote: VoteValue | null): number {
@@ -18,6 +19,7 @@ function voteScore(vote: VoteValue | null): number {
 // `next === null` quita el voto. El backend es la fuente de verdad: al asentar, se invalida.
 export function usePostVote(postId: number) {
   const qc = useQueryClient()
+  const toast = useToast()
   return useMutation({
     mutationFn: async (next: VoteValue | null) => {
       if (next === null) await clearPostVote(postId)
@@ -43,6 +45,7 @@ export function usePostVote(postId: number) {
     },
     onError: (_error, _next, context) => {
       if (context?.prev) qc.setQueryData(['post', postId], context.prev)
+      toast.error('No se pudo registrar tu voto.')
     },
     onSettled: () => {
       qc.invalidateQueries({ queryKey: ['post', postId] })
@@ -54,6 +57,7 @@ export function usePostVote(postId: number) {
 // Voto de un comentario con actualización optimista sobre la lista plana en cache.
 export function useCommentVote(postId: number, commentId: number) {
   const qc = useQueryClient()
+  const toast = useToast()
   return useMutation({
     mutationFn: async (next: VoteValue | null) => {
       if (next === null) await clearCommentVote(commentId)
@@ -80,6 +84,7 @@ export function useCommentVote(postId: number, commentId: number) {
     },
     onError: (_error, _next, context) => {
       if (context?.prev) qc.setQueryData(['comments', postId], context.prev)
+      toast.error('No se pudo registrar tu voto.')
     },
     onSettled: () => {
       qc.invalidateQueries({ queryKey: ['comments', postId] })

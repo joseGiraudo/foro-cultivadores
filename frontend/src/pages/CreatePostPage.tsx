@@ -4,6 +4,7 @@ import { ApiError } from '../api/client'
 import type { PostType } from '../api/types'
 import { PostFields } from '../components/PostFields'
 import { useCreatePost } from '../hooks/usePostMutations'
+import { useToast } from '../toast/useToast'
 
 const TYPE_OPTIONS: { value: PostType; label: string; hint: string }[] = [
   { value: 'QUESTION', label: 'Consulta', hint: 'Una pregunta a la comunidad.' },
@@ -24,6 +25,7 @@ function validate(title: string, content: string, categoryIds: number[]): Record
 export function CreatePostPage() {
   const navigate = useNavigate()
   const create = useCreatePost()
+  const toast = useToast()
 
   const [title, setTitle] = useState('')
   const [postType, setPostType] = useState<PostType>('QUESTION')
@@ -46,6 +48,7 @@ export function CreatePostPage() {
     setFieldErrors({})
     try {
       const post = await create.mutateAsync({ title, content, postType, categoryIds })
+      toast.success('Publicación creada.')
       // Flujo en dos pasos: tras crear, se va a la edición para poder subir imágenes.
       navigate(`/posts/${post.id}/edit`, { replace: true })
     } catch (err) {
