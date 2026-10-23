@@ -17,6 +17,7 @@ import { PostDetailPage } from './pages/PostDetailPage'
 import { ProfilePage } from './pages/ProfilePage'
 import { RegisterPage } from './pages/RegisterPage'
 import { SavedPostsPage } from './pages/SavedPostsPage'
+import { SearchPage } from './pages/SearchPage'
 
 // Layout base + rutas. Las rutas placeholder se van completando por hito (ver docs/frontend-spec.md §6).
 export default function App() {
@@ -24,9 +25,10 @@ export default function App() {
     <div className="min-h-svh bg-cream-50 text-ink">
       <Navbar />
       <SuspendedBanner />
-      <main className="mx-auto max-w-5xl px-4 py-6">
+      <main className="mx-auto max-w-6xl px-4 py-6">
         <Routes>
           <Route path="/" element={<HomePage />} />
+          <Route path="/search" element={<SearchPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route

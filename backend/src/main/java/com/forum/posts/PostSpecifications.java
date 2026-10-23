@@ -1,6 +1,7 @@
 package com.forum.posts;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import org.springframework.data.jpa.domain.Specification;
@@ -8,16 +9,23 @@ import org.springframework.data.jpa.domain.Specification;
 import com.forum.shared.ContentStatus;
 import com.forum.shared.PostType;
 
-import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.Predicate;
 
-/** Construye el filtro dinámico de listado de posts. */
+/**
+ * Filtro dinámico del listado "simple" de posts (sin búsqueda de texto ni filtro por categorías;
+ * esos casos usan queries nativas dedicadas con su propio orden: ver {@link PostRepository}).
+ */
 final class PostSpecifications {
 
     private PostSpecifications() {
     }
 
-    static Specification<Post> filter(Long categoryId, Long authorId, PostType postType, ContentStatus status) {
+    /**
+     * @param authorIds si no es null, restringe a posts de esos autores (feed "siguiendo").
+     *                  Se asume no vacío (el service corta el caso vacío → página vacía).
+     */
+    static Specification<Post> filter(Long authorId, PostType postType, ContentStatus status,
+                                      Collection<Long> authorIds) {
         return (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
             if (status != null) {
@@ -26,15 +34,11 @@ final class PostSpecifications {
             if (authorId != null) {
                 predicates.add(cb.equal(root.get("author").get("id"), authorId));
             }
+            if (authorIds != null) {
+                predicates.add(root.get("author").get("id").in(authorIds));
+            }
             if (postType != null) {
                 predicates.add(cb.equal(root.get("postType"), postType));
-            }
-            if (categoryId != null) {
-                if (query != null) {
-                    query.distinct(true);
-                }
-                Join<Object, Object> categories = root.join("categories");
-                predicates.add(cb.equal(categories.get("id"), categoryId));
             }
             return cb.and(predicates.toArray(new Predicate[0]));
         };

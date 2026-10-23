@@ -12,7 +12,11 @@ import type { ProblemDetail } from './types'
 const API_PREFIX = '/api'
 
 // Query params admitidos: se ignoran los undefined/null al construir la URL.
-export type QueryParams = Record<string, string | number | boolean | undefined | null>
+// Un array se serializa repitiendo la clave (key=a&key=b) → Spring lo bindea a List<>.
+export type QueryParams = Record<
+  string,
+  string | number | boolean | undefined | null | (string | number)[]
+>
 
 // Proveedor del header de autorización. En el Hito 2, AuthContext registra acá la función
 // que devuelve el header Basic (o null si no hay sesión). Mientras tanto, no hay auth.
@@ -51,7 +55,12 @@ function buildUrl(path: string, params?: RequestOptions['params']): string {
   if (!params) return url
   const search = new URLSearchParams()
   for (const [key, value] of Object.entries(params)) {
-    if (value !== undefined && value !== null) search.append(key, String(value))
+    if (value === undefined || value === null) continue
+    if (Array.isArray(value)) {
+      for (const item of value) search.append(key, String(item))
+    } else {
+      search.append(key, String(value))
+    }
   }
   const qs = search.toString()
   return qs ? `${url}?${qs}` : url

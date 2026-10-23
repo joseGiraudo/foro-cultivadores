@@ -2,10 +2,12 @@ import { api, type QueryParams } from './client'
 import type { Page, PostResponse, PostSummaryResponse } from './types'
 
 export interface ListPostsParams {
-  categoryId?: number
+  categoryIds?: number[] // unión/OR; el backend prioriza los posts que matchean más categorías
   authorId?: number
   postType?: string
   status?: string // solo aplica/es visible para MODERATOR+
+  q?: string // búsqueda full-text (título + cuerpo); ordena por relevancia en el backend
+  following?: boolean // feed "siguiendo": solo posts de autores que el usuario sigue
   page?: number
   size?: number
   sort?: string
@@ -13,7 +15,13 @@ export interface ListPostsParams {
 
 // GET /posts → página de resúmenes. Orden por defecto createdAt desc (lo pone el backend).
 export function listPosts(params: ListPostsParams = {}): Promise<Page<PostSummaryResponse>> {
-  return api.get<Page<PostSummaryResponse>>('/posts', params as QueryParams)
+  // Mandar q, following y categoryIds solo cuando aplican (no ensuciar la URL ni la query key).
+  const { q, following, categoryIds, ...rest } = params
+  const query: ListPostsParams = { ...rest }
+  if (q && q.trim()) query.q = q.trim()
+  if (following) query.following = true
+  if (categoryIds && categoryIds.length > 0) query.categoryIds = categoryIds
+  return api.get<Page<PostSummaryResponse>>('/posts', query as QueryParams)
 }
 
 // GET /posts/{id} → detalle. 404 si no existe o no es visible para quien consulta.

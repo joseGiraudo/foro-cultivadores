@@ -1,5 +1,7 @@
 package com.forum.posts;
 
+import java.util.List;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -40,12 +42,14 @@ class PostController {
 
     @GetMapping
     Page<PostSummaryResponse> list(@AuthenticationPrincipal AuthUser principal,
-                                   @RequestParam(required = false) Long categoryId,
+                                   @RequestParam(required = false) List<Long> categoryIds,
                                    @RequestParam(required = false) Long authorId,
                                    @RequestParam(required = false) PostType postType,
                                    @RequestParam(required = false) ContentStatus status,
+                                   @RequestParam(required = false) String q,
+                                   @RequestParam(required = false, defaultValue = "false") boolean following,
                                    @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
-        return postService.list(categoryId, authorId, postType, status, principal, pageable);
+        return postService.list(categoryIds, authorId, postType, status, q, following, principal, pageable);
     }
 
     @GetMapping("/{id}")

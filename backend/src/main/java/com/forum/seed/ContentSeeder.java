@@ -73,7 +73,7 @@ class ContentSeeder implements ApplicationRunner {
         AuthUser adminAuth = auth(admin);
 
         // Solo sembrar si no hay posts todavía.
-        if (postService.list(null, null, null, null, adminAuth, PageRequest.of(0, 1)).getTotalElements() > 0) {
+        if (postService.list(null, null, null, null, null, false, adminAuth, PageRequest.of(0, 1)).getTotalElements() > 0) { // categoryIds=null
             return;
         }
 

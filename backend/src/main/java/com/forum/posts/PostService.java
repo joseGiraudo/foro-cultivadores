@@ -8,9 +8,11 @@ import java.util.Set;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.forum.categories.Category;
@@ -28,6 +30,10 @@ import com.forum.users.UserService;
 @Service
 public class PostService {
 
+    // Lista no vacía para los IN (:authorIds)/(:categoryIds) de las queries nativas cuando ese filtro
+    // NO aplica (su flag lo corto-circuita); evita un IN vacío inválido en SQL.
+    private static final List<Long> PLACEHOLDER_IDS = List.of(-1L);
+
     private final PostRepository postRepository;
     private final CategoryService categoryService;
     private final UserService userService;
@@ -36,10 +42,11 @@ public class PostService {
     private final PostCommentStats postCommentStats;
     private final PostImages postImages;
     private final PostSaveStats postSaveStats;
+    private final FollowedAuthors followedAuthors;
 
     PostService(PostRepository postRepository, CategoryService categoryService, UserService userService,
                 ForumPolicy policy, PostVoteStats postVoteStats, PostCommentStats postCommentStats,
-                PostImages postImages, PostSaveStats postSaveStats) {
+                PostImages postImages, PostSaveStats postSaveStats, FollowedAuthors followedAuthors) {
         this.postRepository = postRepository;
         this.categoryService = categoryService;
         this.userService = userService;
@@ -48,6 +55,7 @@ public class PostService {
         this.postCommentStats = postCommentStats;
         this.postImages = postImages;
         this.postSaveStats = postSaveStats;
+        this.followedAuthors = followedAuthors;
     }
 
     @Transactional
@@ -67,12 +75,46 @@ public class PostService {
     }
 
     @Transactional(readOnly = true)
-    public Page<PostSummaryResponse> list(Long categoryId, Long authorId, PostType postType,
-                                          ContentStatus statusFilter, AuthUser principal, Pageable pageable) {
+    public Page<PostSummaryResponse> list(List<Long> categoryIds, Long authorId, PostType postType,
+                                          ContentStatus statusFilter, String q, boolean following,
+                                          AuthUser principal, Pageable pageable) {
         // Solo los moderadores ven estados distintos de ACTIVE y pueden filtrar por estado.
         ContentStatus effectiveStatus = isModerator(principal) ? statusFilter : ContentStatus.ACTIVE;
-        Specification<Post> spec = PostSpecifications.filter(categoryId, authorId, postType, effectiveStatus);
-        Page<Post> page = postRepository.findAll(spec, pageable);
+
+        // Feed "siguiendo": restringe a autores que el actor sigue. Sin sesión o sin seguidos → vacío.
+        List<Long> followedIds = null;
+        if (following) {
+            if (principal == null) {
+                return new PageImpl<>(List.of(), pageable, 0);
+            }
+            followedIds = followedAuthors.authorsFollowedBy(principal.getId());
+            if (followedIds.isEmpty()) {
+                return new PageImpl<>(List.of(), pageable, 0);
+            }
+        }
+
+        boolean filterByAuthors = followedIds != null;
+        List<Long> authorIdsParam = filterByAuthors ? followedIds : PLACEHOLDER_IDS;
+        boolean hasCategories = categoryIds != null && !categoryIds.isEmpty();
+        List<Long> categoryIdsParam = hasCategories ? categoryIds : PLACEHOLDER_IDS;
+        String postTypeName = postType == null ? null : postType.name();
+        String statusName = effectiveStatus == null ? null : effectiveStatus.name();
+
+        Page<Post> page;
+        if (StringUtils.hasText(q)) {
+            // Búsqueda full-text: el orden lo fija ts_rank, así que se descarta el sort del Pageable.
+            Pageable searchPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize());
+            page = postRepository.search(q, authorId, postTypeName, statusName,
+                    filterByAuthors, authorIdsParam, hasCategories, categoryIdsParam, searchPageable);
+        } else if (hasCategories) {
+            // Unión de categorías, priorizando los posts que matchean más de las elegidas (luego fecha).
+            Pageable rankPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize());
+            page = postRepository.rankByCategories(categoryIds, authorId, postTypeName, statusName,
+                    filterByAuthors, authorIdsParam, rankPageable);
+        } else {
+            Specification<Post> spec = PostSpecifications.filter(authorId, postType, effectiveStatus, followedIds);
+            page = postRepository.findAll(spec, pageable);
+        }
 
         return new PageImpl<>(toSummaries(page.getContent(), principal), pageable, page.getTotalElements());
     }

@@ -105,7 +105,13 @@ function RequestCard({ request }: { request: ContributorRequestResponse }) {
       ) : (
         request.resolvedBy && (
           <p className="mt-3 text-xs text-ink-faint">
-            Resuelta por <span className="font-semibold">{request.resolvedBy.username}</span>
+            Resuelta por{' '}
+            <Link
+              to={`/users/${request.resolvedBy.username}`}
+              className="font-semibold text-ink hover:text-leaf-700"
+            >
+              {request.resolvedBy.username}
+            </Link>
             {request.resolvedAt && <> · {formatDate(request.resolvedAt)}</>}
           </p>
         )
