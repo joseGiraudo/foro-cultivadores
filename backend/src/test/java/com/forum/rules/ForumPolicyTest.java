@@ -25,6 +25,8 @@ class ForumPolicyTest {
         rules.setFollowMinRole(Role.USER);
         rules.setFollowTargetMinRole(Role.CONTRIBUTOR);
         rules.setModerationMinRole(Role.MODERATOR);
+        rules.setBusinessProfileMinRole(Role.CONTRIBUTOR);
+        rules.setCoverImageMinRole(Role.CONTRIBUTOR);
         policy.getImages().setMaxPerPost(10);
         policy.getImages().setAllowedTypes(List.of("image/jpeg"));
         policy.getStorage().getLocal().setBasePath("./data/uploads");

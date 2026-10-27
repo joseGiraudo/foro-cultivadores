@@ -29,7 +29,7 @@ export function Navbar() {
 
   function handleLogout() {
     close()
-    logout()
+    void logout()
     navigate('/')
   }
 

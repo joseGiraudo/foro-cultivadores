@@ -30,7 +30,9 @@ import tools.jackson.databind.ObjectMapper;
  * Demuestra que subir el min-role de creación de QUESTION a CONTRIBUTOR (solo por config) impide
  * que un USER haga preguntas, sin tocar código.
  */
-@SpringBootTest(properties = "forum.rules.post-creation-min-role.QUESTION=CONTRIBUTOR")
+@SpringBootTest(properties = {
+        "forum.rules.post-creation-min-role.QUESTION=CONTRIBUTOR",
+        "forum.security.http-basic-enabled=true"})
 @AutoConfigureMockMvc
 @Import({TestcontainersConfiguration.class, TestUsers.class, TestCategories.class})
 @Transactional

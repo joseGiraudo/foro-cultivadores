@@ -2,10 +2,10 @@
 //
 // Responsabilidades:
 //  - Antepone /api a las rutas (el proxy de Vite reescribe /api → backend).
-//  - Inyecta el header Authorization: Basic ... si hay sesión (se enchufa en el Hito 2).
+//  - Manda la cookie de sesión (httpOnly) en cada request vía credentials: 'include'.
 //  - Traduce los errores ProblemDetail (RFC 9457) a una ApiError tipada.
 //
-// La autenticación queda AISLADA acá: migrar de Basic a JWT es cambiar solo este archivo.
+// La autenticación es por sesión/cookie: el login/logout vive en AuthContext + api/auth.ts.
 
 import type { ProblemDetail } from './types'
 
@@ -17,14 +17,6 @@ export type QueryParams = Record<
   string,
   string | number | boolean | undefined | null | (string | number)[]
 >
-
-// Proveedor del header de autorización. En el Hito 2, AuthContext registra acá la función
-// que devuelve el header Basic (o null si no hay sesión). Mientras tanto, no hay auth.
-let authHeaderProvider: () => string | null = () => null
-
-export function setAuthHeaderProvider(provider: () => string | null): void {
-  authHeaderProvider = provider
-}
 
 // Error de API con la info del ProblemDetail para que la UI decida cómo mostrarlo.
 export class ApiError extends Error {
@@ -81,9 +73,6 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
   const { method = 'GET', body, formData, params } = options
   const headers: Record<string, string> = {}
 
-  const authHeader = authHeaderProvider()
-  if (authHeader) headers['Authorization'] = authHeader
-
   let payload: BodyInit | undefined
   if (formData) {
     payload = formData // el navegador setea el Content-Type con el boundary
@@ -92,7 +81,13 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
     payload = JSON.stringify(body)
   }
 
-  const response = await fetch(buildUrl(path, params), { method, headers, body: payload })
+  // credentials: 'include' → el navegador manda la cookie de sesión (httpOnly) en cada request.
+  const response = await fetch(buildUrl(path, params), {
+    method,
+    headers,
+    body: payload,
+    credentials: 'include',
+  })
 
   if (!response.ok) throw await toApiError(response)
 

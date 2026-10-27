@@ -20,6 +20,11 @@ public class ApiException extends RuntimeException {
         return status;
     }
 
+    /** 401: credenciales ausentes o inválidas. */
+    public static ApiException unauthorized(String message) {
+        return new ApiException(HttpStatus.UNAUTHORIZED, message);
+    }
+
     /** 404: el recurso no existe o no es visible para quien consulta. */
     public static ApiException notFound(String message) {
         return new ApiException(HttpStatus.NOT_FOUND, message);

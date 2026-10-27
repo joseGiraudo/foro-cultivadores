@@ -34,7 +34,7 @@ export function UserMenu() {
 
   function handleLogout() {
     setOpen(false)
-    logout()
+    void logout()
     navigate('/')
   }
 

@@ -13,8 +13,18 @@ export function register(body: RegisterRequest): Promise<UserResponse> {
   return api.post<UserResponse>('/auth/register', body)
 }
 
-// GET /users/me → perfil propio (incluye email). Sirve para validar credenciales Basic:
-// 200 = credenciales válidas; 401 = inválidas.
+// POST /auth/login → abre sesión (cookie httpOnly) y devuelve el perfil propio.
+// 401 si usuario/contraseña incorrectos.
+export function login(body: { username: string; password: string }): Promise<UserResponse> {
+  return api.post<UserResponse>('/auth/login', body)
+}
+
+// POST /auth/logout → cierra la sesión (204). Idempotente.
+export function logout(): Promise<void> {
+  return api.post<void>('/auth/logout')
+}
+
+// GET /users/me → perfil propio (incluye email). 200 = sesión válida; 401 = sin sesión.
 export function getMe(): Promise<UserResponse> {
   return api.get<UserResponse>('/users/me')
 }

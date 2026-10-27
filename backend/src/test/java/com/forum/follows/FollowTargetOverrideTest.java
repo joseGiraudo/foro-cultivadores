@@ -23,7 +23,9 @@ import com.forum.users.UserStatus;
  * Con follow-target-min-role = USER (solo por config), se puede seguir a cualquier usuario, incluso
  * a un USER. Demuestra que la config modifica el comportamiento sin tocar código.
  */
-@SpringBootTest(properties = "forum.rules.follow-target-min-role=USER")
+@SpringBootTest(properties = {
+        "forum.rules.follow-target-min-role=USER",
+        "forum.security.http-basic-enabled=true"})
 @AutoConfigureMockMvc
 @Import({TestcontainersConfiguration.class, TestUsers.class})
 @Transactional

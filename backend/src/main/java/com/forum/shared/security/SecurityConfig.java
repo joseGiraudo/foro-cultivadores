@@ -1,8 +1,11 @@
 package com.forum.shared.security;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -13,21 +16,33 @@ import org.springframework.security.web.SecurityFilterChain;
 import tools.jackson.databind.ObjectMapper;
 
 /**
- * Seguridad del MVP: HTTP Basic sin estado, contraseñas BCrypt. El rol y el estado se leen
- * de la base en cada request (ver ForumUserDetailsService), por lo que los cambios aplican al
- * instante. Es una solución temporal, aislada acá para poder reemplazarla más adelante.
+ * Seguridad: autenticación por <b>sesión con cookie httpOnly</b> (login en {@code POST /auth/login},
+ * logout en {@code /auth/logout}), contraseñas BCrypt. El rol y el estado se leen de la base al
+ * autenticar (ver ForumUserDetailsService).
  *
- * <p>Las lecturas ({@code GET}) de recursos públicos no requieren autenticación. Los endpoints
- * de administración quedan fijos en {@code ADMIN}. El resto requiere autenticación; el bloqueo
- * de escrituras para usuarios suspendidos se aplica en la capa de servicio.
+ * <p>Protección CSRF: se apoya en la cookie de sesión con {@code SameSite=Strict} (configurada en
+ * {@code application.yml}), apropiada para un front servido en el mismo origen que la API; por eso
+ * el token CSRF de Spring queda deshabilitado. Tokens CSRF (defensa en profundidad) son un hardening
+ * posterior si se sirve en orígenes distintos.
+ *
+ * <p>HTTP Basic queda <b>apagado por defecto</b> (prod); se habilita solo vía
+ * {@code forum.security.http-basic-enabled=true} para los tests de integración, que autentican así.
  */
 @Configuration
 @EnableWebSecurity
 class SecurityConfig {
 
+    @Value("${forum.security.http-basic-enabled:false}")
+    private boolean httpBasicEnabled;
+
     @Bean
     PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
+    }
+
+    @Bean
+    AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
+        return configuration.getAuthenticationManager();
     }
 
     @Bean
@@ -36,12 +51,12 @@ class SecurityConfig {
         RestAccessDeniedHandler accessDeniedHandler = new RestAccessDeniedHandler(objectMapper);
 
         http
-                .csrf(csrf -> csrf.disable())
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .csrf(csrf -> csrf.disable()) // protección CSRF vía cookie SameSite=Strict (ver javadoc)
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
                         .requestMatchers("/error").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/auth/register").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/auth/register", "/auth/login", "/auth/logout").permitAll()
                         .requestMatchers("/users/me").authenticated()
                         .requestMatchers(HttpMethod.GET, "/users/*").permitAll()
                         .requestMatchers(HttpMethod.GET, "/users/by-username/*").permitAll()
@@ -59,10 +74,14 @@ class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/contributor-requests/me").authenticated()
                         .requestMatchers("/contributor-requests/**").hasAnyRole("MODERATOR", "ADMIN")
                         .anyRequest().authenticated())
-                .httpBasic(basic -> basic.authenticationEntryPoint(entryPoint))
                 .exceptionHandling(ex -> ex
                         .authenticationEntryPoint(entryPoint)
                         .accessDeniedHandler(accessDeniedHandler));
+
+        // Solo para tests de integración (autentican vía Basic). En prod queda apagado.
+        if (httpBasicEnabled) {
+            http.httpBasic(basic -> basic.authenticationEntryPoint(entryPoint));
+        }
 
         return http.build();
     }

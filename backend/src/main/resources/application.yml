@@ -29,6 +29,16 @@ spring:
       max-file-size: 5MB
       max-request-size: 55MB
 
+server:
+  servlet:
+    session:
+      timeout: 14d
+      cookie:
+        http-only: true          # la cookie de sesión no es accesible por JS (resiste XSS)
+        same-site: strict        # protección CSRF: no se envía en requests cross-site
+        # En prod (HTTPS) poné COOKIE_SECURE=true; en dev sobre http local queda false.
+        secure: ${COOKIE_SECURE:false}
+
 springdoc:
   swagger-ui:
     path: /swagger-ui.html

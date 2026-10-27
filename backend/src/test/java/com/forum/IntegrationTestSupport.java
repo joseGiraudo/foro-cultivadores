@@ -48,10 +48,12 @@ public abstract class IntegrationTestSupport {
     @Autowired
     protected TestVotes votes;
 
-    /** Los tests guardan imágenes en un directorio temporal, no en el ./data/uploads del repo. */
     @DynamicPropertySource
-    static void storageProperties(DynamicPropertyRegistry registry) {
+    static void testProperties(DynamicPropertyRegistry registry) {
+        // Los tests guardan imágenes en un directorio temporal, no en el ./data/uploads del repo.
         Path uploads = Path.of(System.getProperty("java.io.tmpdir"), "forum-test-uploads");
         registry.add("forum.storage.local.base-path", uploads::toString);
+        // En prod la auth es por cookie de sesión; los tests de integración autentican por HTTP Basic.
+        registry.add("forum.security.http-basic-enabled", () -> "true");
     }
 }
