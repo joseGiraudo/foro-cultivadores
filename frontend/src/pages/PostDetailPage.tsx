@@ -4,6 +4,7 @@ import { CommentForm } from '../components/CommentForm'
 import { CommentTree } from '../components/CommentTree'
 import { EditedBadge } from '../components/EditedBadge'
 import { MarkdownContent } from '../components/MarkdownContent'
+import { PlainTextContent } from '../components/PlainTextContent'
 import { PostGallery } from '../components/PostGallery'
 import { PostModerationActions } from '../components/PostModerationActions'
 import { PostTypeBadge } from '../components/PostTypeBadge'
@@ -85,10 +86,16 @@ export function PostDetailPage() {
           <PostModerationActions post={post} />
         </div>
 
-        {/* En consultas las imágenes se muestran en galería; en artículos/guías van embebidas en el Markdown. */}
-        {post.postType === 'QUESTION' && <PostGallery images={post.images} />}
-
-        <MarkdownContent content={post.content} />
+        {/* Consultas: galería de fotos + cuerpo en texto plano. Artículos/guías: Markdown con
+            las imágenes embebidas en el contenido. */}
+        {post.postType === 'QUESTION' ? (
+          <>
+            <PostGallery images={post.images} />
+            <PlainTextContent content={post.content} />
+          </>
+        ) : (
+          <MarkdownContent content={post.content} />
+        )}
       </div>
 
       <section className="mt-8">

@@ -2,20 +2,27 @@ package com.forum.posts;
 
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.imageio.ImageIO;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockMultipartFile;
 
 import com.forum.IntegrationTestSupport;
 import com.forum.categories.Category;
@@ -126,11 +133,26 @@ class PostIntegrationTest extends IntegrationTestSupport {
         Category c2 = categories.create("Exterior");
         Category c3 = categories.create("Equipamiento");
         Category c4 = categories.create("Genéticas");
+        Category c5 = categories.create("Riego");
+        mvc.perform(post("/posts").with(httpBasic("user1", PASSWORD))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json(Map.of("title", "Título válido", "content", "x", "postType", "QUESTION",
+                                "categoryIds",
+                                List.of(interior.getId(), c2.getId(), c3.getId(), c4.getId(), c5.getId())))))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void create_fourCategories_returns201() throws Exception {
+        Category c2 = categories.create("Exterior");
+        Category c3 = categories.create("Equipamiento");
+        Category c4 = categories.create("Genéticas");
         mvc.perform(post("/posts").with(httpBasic("user1", PASSWORD))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json(Map.of("title", "Título válido", "content", "x", "postType", "QUESTION",
                                 "categoryIds", List.of(interior.getId(), c2.getId(), c3.getId(), c4.getId())))))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.categories.length()").value(4));
     }
 
     @Test
@@ -140,6 +162,70 @@ class PostIntegrationTest extends IntegrationTestSupport {
                         .content(json(Map.of("title", "Título válido", "content", "x",
                                 "postType", "QUESTION", "categoryIds", List.of(999999)))))
                 .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void createQuestionWithImages_asUser_returns201AndImagesInOrder() throws Exception {
+        MockMultipartFile post = new MockMultipartFile("post", "", MediaType.APPLICATION_JSON_VALUE,
+                json(Map.of("title", "¿Qué le pasa a mi planta?", "content", "Miren estas hojas",
+                        "postType", "QUESTION", "categoryIds", List.of(interior.getId()))).getBytes());
+        MockMultipartFile img1 = new MockMultipartFile("images", "a.png", MediaType.IMAGE_PNG_VALUE, pngBytes());
+        MockMultipartFile img2 = new MockMultipartFile("images", "b.png", MediaType.IMAGE_PNG_VALUE, pngBytes());
+
+        mvc.perform(multipart("/posts").file(post).file(img1).file(img2).with(httpBasic("user1", PASSWORD)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.postType").value("QUESTION"))
+                .andExpect(jsonPath("$.images.length()").value(2))
+                .andExpect(jsonPath("$.images[0].position").value(0))
+                .andExpect(jsonPath("$.images[1].position").value(1));
+    }
+
+    @Test
+    void createWithImages_rejectsNonImagePart_returns415() throws Exception {
+        MockMultipartFile post = new MockMultipartFile("post", "", MediaType.APPLICATION_JSON_VALUE,
+                json(Map.of("title", "Título válido", "content", "x",
+                        "postType", "QUESTION", "categoryIds", List.of(interior.getId()))).getBytes());
+        MockMultipartFile notImage = new MockMultipartFile("images", "a.png", MediaType.IMAGE_PNG_VALUE,
+                "esto no es una imagen".getBytes());
+
+        mvc.perform(multipart("/posts").file(post).file(notImage).with(httpBasic("user1", PASSWORD)))
+                .andExpect(status().isUnsupportedMediaType());
+    }
+
+    @Test
+    void createQuestionWithoutImages_viaMultipart_returns201() throws Exception {
+        MockMultipartFile post = new MockMultipartFile("post", "", MediaType.APPLICATION_JSON_VALUE,
+                json(Map.of("title", "Sin fotos pero válido", "content", "x",
+                        "postType", "QUESTION", "categoryIds", List.of(interior.getId()))).getBytes());
+
+        mvc.perform(multipart("/posts").file(post).with(httpBasic("user1", PASSWORD)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.images.length()").value(0));
+    }
+
+    /** PNG mínimo real (1×1) que pasa la validación por magic bytes y el decode de ImageIO. */
+    private static byte[] pngBytes() throws IOException {
+        BufferedImage image = new BufferedImage(1, 1, BufferedImage.TYPE_INT_RGB);
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        ImageIO.write(image, "png", out);
+        return out.toByteArray();
+    }
+
+    // --- Tipos creables por rol ---
+
+    @Test
+    void creatableTypes_asUser_onlyQuestion() throws Exception {
+        mvc.perform(get("/posts/creatable-types").with(httpBasic("user1", PASSWORD)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0]").value("QUESTION"));
+    }
+
+    @Test
+    void creatableTypes_asContributor_allTypes() throws Exception {
+        mvc.perform(get("/posts/creatable-types").with(httpBasic("grow", PASSWORD)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(3));
     }
 
     // --- Lectura y visibilidad ---

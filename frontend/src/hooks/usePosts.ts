@@ -1,5 +1,11 @@
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
-import { getPost, listPosts, listSavedPosts, type ListPostsParams } from '../api/posts'
+import {
+  getPost,
+  listCreatableTypes,
+  listPosts,
+  listSavedPosts,
+  type ListPostsParams,
+} from '../api/posts'
 
 export function usePosts(params: ListPostsParams, options?: { enabled?: boolean }) {
   return useQuery({
@@ -16,6 +22,15 @@ export function usePost(id: number) {
   return useQuery({
     queryKey: ['post', id],
     queryFn: () => getPost(id),
+  })
+}
+
+// Tipos de post que el usuario actual puede crear (según su rol). Solo tiene sentido logueado.
+export function useCreatableTypes(options?: { enabled?: boolean }) {
+  return useQuery({
+    queryKey: ['creatableTypes'],
+    queryFn: listCreatableTypes,
+    enabled: options?.enabled ?? true,
   })
 }
 

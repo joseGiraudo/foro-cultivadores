@@ -1,6 +1,7 @@
 package com.forum.posts;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -41,12 +42,14 @@ public class PostService {
     private final PostVoteStats postVoteStats;
     private final PostCommentStats postCommentStats;
     private final PostImages postImages;
+    private final PostImageWriter postImageWriter;
     private final PostSaveStats postSaveStats;
     private final FollowedAuthors followedAuthors;
 
     PostService(PostRepository postRepository, CategoryService categoryService, UserService userService,
                 ForumPolicy policy, PostVoteStats postVoteStats, PostCommentStats postCommentStats,
-                PostImages postImages, PostSaveStats postSaveStats, FollowedAuthors followedAuthors) {
+                PostImages postImages, PostImageWriter postImageWriter, PostSaveStats postSaveStats,
+                FollowedAuthors followedAuthors) {
         this.postRepository = postRepository;
         this.categoryService = categoryService;
         this.userService = userService;
@@ -54,24 +57,61 @@ public class PostService {
         this.postVoteStats = postVoteStats;
         this.postCommentStats = postCommentStats;
         this.postImages = postImages;
+        this.postImageWriter = postImageWriter;
         this.postSaveStats = postSaveStats;
         this.followedAuthors = followedAuthors;
     }
 
     @Transactional
     public PostResponse create(AuthUser principal, CreatePostRequest request) {
+        return create(principal, request, List.of());
+    }
+
+    /**
+     * Crea el post y, en la misma transacción, guarda las imágenes recibidas (consultas con fotos).
+     * Si algo falla, todo revierte. Las imágenes se validan por tamaño acá (política) y por tipo real
+     * dentro del writer (415). El orden de subida define la position (orden de la galería).
+     */
+    @Transactional
+    public PostResponse create(AuthUser principal, CreatePostRequest request, List<byte[]> images) {
         principal.ensureCanWrite();
         requireCreationRole(principal, request.postType());
+        if (images.size() > policy.maxImagesPerPost()) {
+            throw ApiException.conflict("El post supera el máximo de imágenes permitidas");
+        }
+        long maxBytes = policy.maxImageFileSize().toBytes();
+        for (byte[] image : images) {
+            if (image.length > maxBytes) {
+                throw ApiException.payloadTooLarge("Una imagen supera el tamaño máximo permitido");
+            }
+        }
 
         Set<Category> categories = categoryService.getEntitiesByIds(request.categoryIds());
         User author = userService.getEntityById(principal.getId());
         Post post = new Post(request.title(), request.content(), author, request.postType(), categories);
-        return toResponse(postRepository.save(post), principal);
+        Post saved = postRepository.save(post);
+        for (byte[] image : images) {
+            postImageWriter.store(saved.getId(), image);
+        }
+        return toResponse(saved, principal);
     }
 
     @Transactional(readOnly = true)
     public PostResponse get(Long id, AuthUser principal) {
         return toResponse(loadVisible(id, principal), principal);
+    }
+
+    /**
+     * Tipos de post que el actor puede crear según su rol (regla configurable por tipo). La UI lo usa
+     * para no ofrecer tipos que el backend igual rechazaría. Anónimo → vacío (crear requiere sesión).
+     */
+    public List<PostType> creatableTypes(AuthUser principal) {
+        if (principal == null) {
+            return List.of();
+        }
+        return Arrays.stream(PostType.values())
+                .filter(type -> principal.getRole().isAtLeast(policy.postCreationMinRole(type)))
+                .toList();
     }
 
     @Transactional(readOnly = true)

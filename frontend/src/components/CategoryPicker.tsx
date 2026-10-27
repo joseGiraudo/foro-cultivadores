@@ -6,9 +6,9 @@ interface CategoryPickerProps {
   max?: number
 }
 
-// Selector de categorías (entre 1 y `max`, por defecto 3). Al llegar al tope,
+// Selector de categorías (entre 1 y `max`, por defecto 4). Al llegar al tope,
 // deshabilita las no seleccionadas.
-export function CategoryPicker({ selected, onChange, max = 3 }: CategoryPickerProps) {
+export function CategoryPicker({ selected, onChange, max = 4 }: CategoryPickerProps) {
   const { data: categories, isLoading } = useCategories()
 
   if (isLoading) return <p className="text-sm text-ink-faint">Cargando categorías…</p>

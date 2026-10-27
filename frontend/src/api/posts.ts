@@ -1,5 +1,5 @@
 import { api, type QueryParams } from './client'
-import type { Page, PostResponse, PostSummaryResponse } from './types'
+import type { Page, PostResponse, PostSummaryResponse, PostType } from './types'
 
 export interface ListPostsParams {
   categoryIds?: number[] // unión/OR; el backend prioriza los posts que matchean más categorías
@@ -29,6 +29,12 @@ export function getPost(id: number): Promise<PostResponse> {
   return api.get<PostResponse>(`/posts/${id}`)
 }
 
+// GET /posts/creatable-types → tipos que el usuario actual puede crear según su rol (configurable
+// en el backend). La UI arma el combo de tipo con esto en vez de hardcodear los roles.
+export function listCreatableTypes(): Promise<PostType[]> {
+  return api.get<PostType[]>('/posts/creatable-types')
+}
+
 export interface CreatePostBody {
   title: string
   content: string
@@ -39,6 +45,17 @@ export interface CreatePostBody {
 // POST /posts → 201 con el post creado. 403 si el rol no alcanza para el tipo elegido.
 export function createPost(body: CreatePostBody): Promise<PostResponse> {
   return api.post<PostResponse>('/posts', body)
+}
+
+// POST /posts (multipart) → crea el post y sube sus imágenes en una sola request/transacción.
+// La metadata va como parte "post" (JSON); las fotos como partes "images" (su orden = la galería).
+// Se usa en la creación de consultas con fotos. 413 si una imagen es muy grande, 415 si el tipo
+// no está permitido, 409 si supera el máximo por post.
+export function createPostWithImages(body: CreatePostBody, files: File[]): Promise<PostResponse> {
+  const formData = new FormData()
+  formData.append('post', new Blob([JSON.stringify(body)], { type: 'application/json' }))
+  for (const file of files) formData.append('images', file)
+  return api.postForm<PostResponse>('/posts', formData)
 }
 
 // PATCH /posts/{id} → edición parcial (title/content/categoryIds). Solo autor, solo si ACTIVE.

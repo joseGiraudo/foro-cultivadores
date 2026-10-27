@@ -21,7 +21,7 @@ public record CreatePostRequest(
         PostType postType,
 
         @NotNull
-        @Size(min = 1, max = 3, message = "un post debe tener entre 1 y 3 categorías")
+        @Size(min = 1, max = 4, message = "un post debe tener entre 1 y 4 categorías")
         List<Long> categoryIds
 ) {
 }

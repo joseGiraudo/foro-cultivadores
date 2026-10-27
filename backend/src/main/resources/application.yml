@@ -23,9 +23,11 @@ spring:
         max-page-size: 100
   servlet:
     multipart:
-      # Coherente con forum.images.max-file-size; el request permite un poco más por el overhead multipart.
+      # max-file-size: por archivo, coherente con forum.images.max-file-size.
+      # max-request-size: la creación de una consulta manda varias imágenes en una sola request
+      # (hasta forum.images.max-per-post × 5MB), así que el request permite el lote completo + overhead.
       max-file-size: 5MB
-      max-request-size: 6MB
+      max-request-size: 55MB
 
 springdoc:
   swagger-ui:

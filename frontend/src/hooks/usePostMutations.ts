@@ -3,6 +3,7 @@ import { deleteImage, uploadImage } from '../api/images'
 import {
   changePostStatus,
   createPost,
+  createPostWithImages,
   savePost,
   unsavePost,
   updatePost,
@@ -15,6 +16,16 @@ export function useCreatePost() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (body: CreatePostBody) => createPost(body),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['posts'] }),
+  })
+}
+
+// Crea el post con sus imágenes en un solo paso (consultas con fotos). Atómico en el backend.
+export function useCreatePostWithImages() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ body, files }: { body: CreatePostBody; files: File[] }) =>
+      createPostWithImages(body, files),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['posts'] }),
   })
 }

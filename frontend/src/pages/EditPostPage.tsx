@@ -1,7 +1,8 @@
-import { useEffect, useRef, useState, type FormEvent } from 'react'
+import { useState, type FormEvent } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { ApiError } from '../api/client'
-import type { ImageResponse } from '../api/types'
+import { uploadImage } from '../api/images'
+import type { PostResponse } from '../api/types'
 import { ImageUploader } from '../components/ImageUploader'
 import { PostFields } from '../components/PostFields'
 import { PostTypeBadge } from '../components/PostTypeBadge'
@@ -14,49 +15,44 @@ import { useToast } from '../toast/useToast'
 export function EditPostPage() {
   const { id } = useParams<{ id: string }>()
   const postId = Number(id)
-  const navigate = useNavigate()
   const { user } = useAuth()
-
   const { data: post, isLoading, isError, error, refetch } = usePost(postId)
-  const update = useUpdatePost(postId)
-  const changeStatus = useChangePostStatus(postId)
-  const toast = useToast()
-
-  const [title, setTitle] = useState('')
-  const [categoryIds, setCategoryIds] = useState<number[]>([])
-  const [content, setContent] = useState('')
-  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
-  const [formError, setFormError] = useState<string | null>(null)
-
-  // Sembrar el formulario una sola vez por post. Importante: subir/borrar imágenes invalida
-  // ['post', id] y refetchea; sin este guard, se perderían las ediciones sin guardar.
-  const seededId = useRef<number | null>(null)
-  useEffect(() => {
-    if (post && seededId.current !== post.id) {
-      setTitle(post.title)
-      setCategoryIds(post.categories.map((category) => category.id))
-      setContent(post.content)
-      seededId.current = post.id
-    }
-  }, [post])
 
   if (isLoading) return <Loading />
   if (isError) return <ErrorState error={error} onRetry={refetch} />
   if (!post) return null
 
-  const isAuthor = user?.id === post.author.id
-  if (!isAuthor) {
+  if (user?.id !== post.author.id) {
     return <p className="text-ink-soft">No podés editar esta publicación.</p>
   }
   if (post.status !== 'ACTIVE') {
     return <p className="text-ink-soft">Esta publicación no está activa y no se puede editar.</p>
   }
 
-  // En artículos/guías las imágenes se referencian en el Markdown; en consultas van en galería.
-  const canInsertImages = post.postType !== 'QUESTION'
+  // key por id: el form inicializa su estado desde el post al montar (sin efecto de seeding); si se
+  // navega a otro post, se remonta con los datos nuevos. El refetch (p. ej. tras subir una imagen en
+  // consultas) NO cambia el id, así que no se remonta y no se pierden ediciones sin guardar.
+  return <EditPostForm key={post.id} post={post} />
+}
 
-  function insertReference(image: ImageResponse) {
-    setContent((current) => `${current.trimEnd()}\n\n![](${image.url})\n`)
+function EditPostForm({ post }: { post: PostResponse }) {
+  const navigate = useNavigate()
+  const update = useUpdatePost(post.id)
+  const changeStatus = useChangePostStatus(post.id)
+  const toast = useToast()
+
+  const [title, setTitle] = useState(post.title)
+  const [categoryIds, setCategoryIds] = useState<number[]>(post.categories.map((c) => c.id))
+  const [content, setContent] = useState(post.content)
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
+  const [formError, setFormError] = useState<string | null>(null)
+
+  const isQuestion = post.postType === 'QUESTION'
+
+  // Para el editor por bloques (artículos/guías): sube imágenes contra el post ya existente.
+  async function handleUploadImage(file: File): Promise<string> {
+    const image = await uploadImage(post.id, file)
+    return image.url
   }
 
   async function handleSubmit(event: FormEvent) {
@@ -113,6 +109,8 @@ export function EditPostPage() {
           content={content}
           onContentChange={setContent}
           fieldErrors={fieldErrors}
+          contentMode={isQuestion ? 'plain' : 'blocks'}
+          onUploadImage={isQuestion ? undefined : handleUploadImage}
         />
 
         {formError && <p className="text-sm text-red-700">{formError}</p>}
@@ -139,19 +137,17 @@ export function EditPostPage() {
         </div>
       </form>
 
-      <section className="mt-8">
-        <h2 className="mb-2 text-lg font-semibold text-ink">Imágenes</h2>
-        <p className="mb-3 text-sm text-ink-faint">
-          {canInsertImages
-            ? 'Subí imágenes y usá "Insertar en el texto" para referenciarlas en el contenido. Acordate de guardar los cambios.'
-            : 'En las consultas las imágenes se muestran en galería, en el orden en que las subís.'}
-        </p>
-        <ImageUploader
-          postId={post.id}
-          images={post.images}
-          onInsertReference={canInsertImages ? insertReference : undefined}
-        />
-      </section>
+      {/* Consultas: galería de fotos (orden de subida). Artículos/guías manejan sus imágenes
+          dentro del editor por bloques, intercaladas con el texto. */}
+      {isQuestion && (
+        <section className="mt-8">
+          <h2 className="mb-2 text-lg font-semibold text-ink">Imágenes</h2>
+          <p className="mb-3 text-sm text-ink-faint">
+            En las consultas las imágenes se muestran en galería, en el orden en que las subís.
+          </p>
+          <ImageUploader postId={post.id} images={post.images} />
+        </section>
+      )}
     </div>
   )
 }

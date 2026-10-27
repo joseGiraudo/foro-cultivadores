@@ -7,9 +7,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.forum.images.ImageProcessor.ProcessedImage;
 import com.forum.posts.ImageResponse;
 import com.forum.posts.Post;
+import com.forum.posts.PostImageWriter;
 import com.forum.posts.PostService;
 import com.forum.rules.ForumPolicy;
 import com.forum.shared.ContentStatus;
@@ -22,15 +22,15 @@ public class ImageService {
     private final PostImageRepository postImageRepository;
     private final PostService postService;
     private final ImageStorage imageStorage;
-    private final ImageProcessor imageProcessor;
+    private final PostImageWriter imageWriter;
     private final ForumPolicy policy;
 
     ImageService(PostImageRepository postImageRepository, PostService postService, ImageStorage imageStorage,
-                 ImageProcessor imageProcessor, ForumPolicy policy) {
+                 PostImageWriter imageWriter, ForumPolicy policy) {
         this.postImageRepository = postImageRepository;
         this.postService = postService;
         this.imageStorage = imageStorage;
-        this.imageProcessor = imageProcessor;
+        this.imageWriter = imageWriter;
         this.policy = policy;
     }
 
@@ -53,20 +53,7 @@ public class ImageService {
         if (postImageRepository.countByPostId(postId) >= policy.maxImagesPerPost()) {
             throw ApiException.conflict("El post alcanzó el máximo de imágenes permitidas");
         }
-
-        ProcessedImage processed = imageProcessor.process(content);
-        int position = postImageRepository.maxPosition(postId) + 1;
-
-        // Se escribe el archivo primero; si falla el guardado en base, se borra para no dejar huérfanos.
-        String storageKey = imageStorage.store(processed.data(), processed.extension());
-        try {
-            PostImage saved = postImageRepository.save(new PostImage(
-                    postId, storageKey, processed.contentType(), processed.data().length, position));
-            return ImageResponse.of(saved.getId(), saved.getPosition(), saved.getContentType(), saved.getSizeBytes());
-        } catch (RuntimeException e) {
-            imageStorage.delete(storageKey);
-            throw e;
-        }
+        return imageWriter.store(postId, content);
     }
 
     @Transactional

@@ -30,7 +30,12 @@ const components: Components = {
     <pre className="my-3 overflow-x-auto rounded-md bg-sand-200 p-3 text-sm" {...props} />
   ),
   img: (props) => (
-    <img className="my-3 max-w-full rounded-md" loading="lazy" alt={props.alt ?? ''} {...props} />
+    <img
+      className="mx-auto my-4 block max-w-full rounded-md"
+      loading="lazy"
+      alt={props.alt ?? ''}
+      {...props}
+    />
   ),
   // Las tablas de GFM pueden ser más anchas que la pantalla: las envolvemos en un
   // contenedor con scroll horizontal para no romper el layout en mobile.
