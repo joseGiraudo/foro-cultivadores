@@ -13,25 +13,31 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.forum.images.ImageStorage;
 import com.forum.rules.ForumPolicy;
 import com.forum.shared.error.ApiException;
 
 @Service
 public class UserService {
 
+    /** Versión vigente de Términos + Privacidad. Subir esto permitiría re-pedir aceptación a futuro. */
+    public static final String TERMS_VERSION = "2026-10-27";
+
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final FollowStats followStats;
     private final ForumPolicy policy;
     private final AccountService accountService;
+    private final ImageStorage imageStorage;
 
     UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, FollowStats followStats,
-                ForumPolicy policy, AccountService accountService) {
+                ForumPolicy policy, AccountService accountService, ImageStorage imageStorage) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.followStats = followStats;
         this.policy = policy;
         this.accountService = accountService;
+        this.imageStorage = imageStorage;
     }
 
     @Transactional
@@ -48,6 +54,7 @@ public class UserService {
                 passwordEncoder.encode(request.password()),
                 Role.USER,
                 UserStatus.ACTIVE);
+        user.acceptTerms(TERMS_VERSION); // registró el consentimiento (18 + T&C/Privacidad)
         User saved = userRepository.save(user);
         // El email arranca sin verificar: se manda el link de verificación (no puede loguear hasta confirmar).
         accountService.sendVerificationEmail(saved);
@@ -57,6 +64,25 @@ public class UserService {
     @Transactional(readOnly = true)
     public UserResponse getMe(AuthUser principal) {
         return toResponse(getEntityById(principal.getId()), true, principal);
+    }
+
+    /**
+     * Baja de cuenta (derecho de supresión): anonimiza los datos personales y borra los archivos de
+     * avatar/portada. Los posts/comentarios se conservan, mostrados como "[cuenta eliminada]". La
+     * cuenta queda sin poder iniciar sesión (contraseña ilegible).
+     */
+    @Transactional
+    public void deleteMe(AuthUser principal) {
+        User user = getEntityById(principal.getId());
+        String avatarKey = user.getAvatarStorageKey();
+        String coverKey = user.getCoverStorageKey();
+        user.anonymize();
+        if (avatarKey != null) {
+            imageStorage.delete(avatarKey);
+        }
+        if (coverKey != null) {
+            imageStorage.delete(coverKey);
+        }
     }
 
     @Transactional(readOnly = true)

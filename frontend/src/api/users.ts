@@ -18,6 +18,11 @@ export function updateMe(input: UpdateMeInput): Promise<UserResponse> {
   return api.patch<UserResponse>('/users/me', input)
 }
 
+// DELETE /users/me → baja de cuenta (anonimización). 204. Cierra la sesión en el server.
+export function deleteMe(): Promise<void> {
+  return api.delete<void>('/users/me')
+}
+
 // POST/DELETE /users/{id}/follow → 204 (idempotentes).
 // Seguir a alguien con rol menor a follow-target-min-role (CONTRIBUTOR por config) → 400.
 // Seguirse a uno mismo → 400.

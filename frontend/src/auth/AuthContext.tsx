@@ -5,6 +5,7 @@ import {
   logout as logoutRequest,
   register as registerRequest,
 } from '../api/auth'
+import { deleteMe } from '../api/users'
 import { ApiError } from '../api/client'
 import type { UserResponse } from '../api/types'
 
@@ -15,8 +16,10 @@ export interface AuthContextValue {
   isAuthenticated: boolean
   isSuspended: boolean
   login: (username: string, password: string) => Promise<void>
-  register: (username: string, email: string, password: string) => Promise<void>
+  register: (username: string, email: string, password: string, acceptedTerms: boolean) => Promise<void>
   logout: () => Promise<void>
+  // Baja de cuenta (anonimización). Cierra la sesión local al terminar.
+  deleteAccount: () => Promise<void>
   // Re-lee /users/me y actualiza el usuario en sesión (p. ej. tras editar la bio).
   refreshMe: () => Promise<void>
 }
@@ -62,8 +65,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   // Registra la cuenta. NO abre sesión: el usuario debe verificar su email antes de poder ingresar.
-  async function register(username: string, email: string, password: string): Promise<void> {
-    await registerRequest({ username, email, password })
+  async function register(
+    username: string,
+    email: string,
+    password: string,
+    acceptedTerms: boolean,
+  ): Promise<void> {
+    await registerRequest({ username, email, password, acceptedTerms })
   }
 
   async function logout(): Promise<void> {
@@ -73,6 +81,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Pase lo que pase en el server, localmente olvidamos la sesión.
       setUser(null)
     }
+  }
+
+  async function deleteAccount(): Promise<void> {
+    await deleteMe()
+    setUser(null) // la baja también invalida la sesión en el server
   }
 
   async function refreshMe(): Promise<void> {
@@ -89,6 +102,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       login,
       register,
       logout,
+      deleteAccount,
       refreshMe,
     }),
     [user, initializing],

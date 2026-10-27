@@ -55,6 +55,7 @@ class UserSeeder implements ApplicationRunner {
         User user = new User(username, email, passwordEncoder.encode(DEFAULT_PASSWORD), role, status);
         user.setBio(bio);
         user.markEmailVerified(); // los usuarios de ejemplo ya quedan verificados (pueden loguear)
+        user.acceptTerms(UserService.TERMS_VERSION);
         userRepository.save(user);
     }
 
@@ -69,6 +70,7 @@ class UserSeeder implements ApplicationRunner {
         user.setInstagram(instagram);
         user.setLocation(location);
         user.markEmailVerified();
+        user.acceptTerms(UserService.TERMS_VERSION);
         userRepository.save(user);
     }
 }

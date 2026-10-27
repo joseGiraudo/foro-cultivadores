@@ -6,6 +6,6 @@ import com.forum.users.User;
 record CommentAuthor(Long id, String username, String avatarUrl) {
 
     static CommentAuthor of(User user) {
-        return new CommentAuthor(user.getId(), user.getUsername(), user.getAvatarUrl());
+        return new CommentAuthor(user.getId(), user.displayUsername(), user.getAvatarUrl());
     }
 }

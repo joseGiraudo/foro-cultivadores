@@ -56,7 +56,8 @@ class AccountIntegrationTest {
 
     private String registerAndGetToken(String username, String email) throws Exception {
         mvc.perform(post("/auth/register").contentType(MediaType.APPLICATION_JSON)
-                        .content(json(Map.of("username", username, "email", email, "password", "password123"))))
+                        .content(json(Map.of("username", username, "email", email,
+                                "password", "password123", "acceptedTerms", true))))
                 .andExpect(status().isCreated());
         return tokenFromLastEmail();
     }

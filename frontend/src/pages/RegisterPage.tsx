@@ -3,6 +3,10 @@ import { Link } from 'react-router-dom'
 import { resendVerification } from '../api/auth'
 import { ApiError } from '../api/client'
 import { useAuth } from '../auth/useAuth'
+import { LegalBody } from '../components/LegalBody'
+import { Modal } from '../components/Modal'
+import { PrivacyContent } from './PrivacyPage'
+import { TermsContent } from './TermsPage'
 
 const USERNAME_RE = /^[a-zA-Z0-9_]{3,30}$/
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -28,6 +32,8 @@ export function RegisterPage() {
   const [username, setUsername] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [accepted, setAccepted] = useState(false)
+  const [legalModal, setLegalModal] = useState<'terms' | 'privacy' | null>(null)
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
   const [formError, setFormError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
@@ -39,6 +45,9 @@ export function RegisterPage() {
     setFormError(null)
 
     const clientErrors = validate(username, email, password)
+    if (!accepted) {
+      clientErrors.acceptedTerms = 'Tenés que confirmar y aceptar para continuar.'
+    }
     if (Object.keys(clientErrors).length > 0) {
       setFieldErrors(clientErrors)
       return
@@ -46,7 +55,7 @@ export function RegisterPage() {
     setFieldErrors({})
     setSubmitting(true)
     try {
-      await register(username, email, password)
+      await register(username, email, password, accepted)
       setRegisteredEmail(email)
     } catch (err) {
       if (err instanceof ApiError) {
@@ -135,6 +144,39 @@ export function RegisterPage() {
           {fieldErrors.password && <p className="mt-1 text-sm text-red-700">{fieldErrors.password}</p>}
         </label>
 
+        <div>
+          <label className="flex items-start gap-2 text-sm text-ink-soft">
+            <input
+              type="checkbox"
+              checked={accepted}
+              onChange={(e) => setAccepted(e.target.checked)}
+              className="mt-0.5"
+            />
+            <span>
+              Confirmo que soy mayor de 18 años y acepto los{' '}
+              <button
+                type="button"
+                onClick={() => setLegalModal('terms')}
+                className="font-semibold text-leaf-700 hover:underline"
+              >
+                Términos y Condiciones
+              </button>{' '}
+              y la{' '}
+              <button
+                type="button"
+                onClick={() => setLegalModal('privacy')}
+                className="font-semibold text-leaf-700 hover:underline"
+              >
+                Política de Privacidad
+              </button>
+              .
+            </span>
+          </label>
+          {fieldErrors.acceptedTerms && (
+            <p className="mt-1 text-sm text-red-700">{fieldErrors.acceptedTerms}</p>
+          )}
+        </div>
+
         {formError && <p className="text-sm text-red-700">{formError}</p>}
 
         <button type="submit" disabled={submitting} className="btn-primary w-full">
@@ -148,6 +190,15 @@ export function RegisterPage() {
           Ingresá
         </Link>
       </p>
+
+      {legalModal && (
+        <Modal
+          title={legalModal === 'terms' ? 'Términos y Condiciones' : 'Política de Privacidad'}
+          onClose={() => setLegalModal(null)}
+        >
+          <LegalBody>{legalModal === 'terms' ? <TermsContent /> : <PrivacyContent />}</LegalBody>
+        </Modal>
+      )}
     </div>
   )
 }

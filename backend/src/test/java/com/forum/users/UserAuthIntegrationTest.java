@@ -1,6 +1,7 @@
 package com.forum.users;
 
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -52,7 +53,8 @@ class UserAuthIntegrationTest extends IntegrationTestSupport {
     void register_valid_returns201WithoutEmail() throws Exception {
         mvc.perform(post("/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(json(Map.of("username", "nuevo", "email", "nuevo@forum.test", "password", "secret123"))))
+                        .content(json(Map.of("username", "nuevo", "email", "nuevo@forum.test",
+                                "password", "secret123", "acceptedTerms", true))))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.username").value("nuevo"))
                 .andExpect(jsonPath("$.role").value("USER"))
@@ -64,7 +66,8 @@ class UserAuthIntegrationTest extends IntegrationTestSupport {
     void register_duplicateUsername_returns409() throws Exception {
         mvc.perform(post("/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(json(Map.of("username", "user1", "email", "otro@forum.test", "password", "secret123"))))
+                        .content(json(Map.of("username", "user1", "email", "otro@forum.test",
+                                "password", "secret123", "acceptedTerms", true))))
                 .andExpect(status().isConflict());
     }
 
@@ -72,7 +75,8 @@ class UserAuthIntegrationTest extends IntegrationTestSupport {
     void register_duplicateEmail_returns409() throws Exception {
         mvc.perform(post("/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(json(Map.of("username", "otro", "email", "user1@forum.test", "password", "secret123"))))
+                        .content(json(Map.of("username", "otro", "email", "user1@forum.test",
+                                "password", "secret123", "acceptedTerms", true))))
                 .andExpect(status().isConflict());
     }
 
@@ -80,11 +84,40 @@ class UserAuthIntegrationTest extends IntegrationTestSupport {
     void register_invalidFields_returns400WithFieldErrors() throws Exception {
         mvc.perform(post("/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(json(Map.of("username", "a b", "email", "no-es-email", "password", "short"))))
+                        .content(json(Map.of("username", "a b", "email", "no-es-email",
+                                "password", "short", "acceptedTerms", true))))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.errors.username").exists())
                 .andExpect(jsonPath("$.errors.email").exists())
                 .andExpect(jsonPath("$.errors.password").exists());
+    }
+
+    @Test
+    void register_withoutAcceptingTerms_returns400() throws Exception {
+        mvc.perform(post("/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json(Map.of("username", "sinterminos", "email", "st@forum.test",
+                                "password", "secret123", "acceptedTerms", false))))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors.acceptedTerms").exists());
+    }
+
+    // --- Baja de cuenta ---
+
+    @Test
+    void deleteMe_anonymizes_andBlocksLogin_andShowsAnonymousProfile() throws Exception {
+        mvc.perform(delete("/users/me").with(httpBasic("user1", PASSWORD)))
+                .andExpect(status().isNoContent());
+
+        // La contraseña quedó ilegible: las credenciales viejas ya no autentican.
+        mvc.perform(get("/users/me").with(httpBasic("user1", PASSWORD)))
+                .andExpect(status().isUnauthorized());
+
+        // El perfil público ahora se muestra anonimizado.
+        mvc.perform(get("/users/" + normalUser.getId()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.username").value("[cuenta eliminada]"))
+                .andExpect(jsonPath("$.bio").doesNotExist());
     }
 
     // --- /users/me ---

@@ -74,6 +74,17 @@ public class User {
     @Column(name = "email_verified", nullable = false)
     private boolean emailVerified;
 
+    /** Momento/versión de T&C + Privacidad aceptados al registrarse (null en usuarios previos). */
+    @Column(name = "terms_accepted_at")
+    private Instant termsAcceptedAt;
+
+    @Column(name = "terms_version", length = 20)
+    private String termsVersion;
+
+    /** Marca de baja: si no es null, la cuenta fue eliminada (datos anonimizados). */
+    @Column(name = "deleted_at")
+    private Instant deletedAt;
+
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 
@@ -218,5 +229,39 @@ public class User {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public void acceptTerms(String version) {
+        this.termsAcceptedAt = Instant.now();
+        this.termsVersion = version;
+    }
+
+    public boolean isDeleted() {
+        return deletedAt != null;
+    }
+
+    /** Nombre a mostrar en la UI: genérico si la cuenta fue dada de baja. */
+    public String displayUsername() {
+        return isDeleted() ? "[cuenta eliminada]" : username;
+    }
+
+    /**
+     * Anonimiza la cuenta (baja / derecho de supresión): borra datos personales y la deja inutilizable
+     * para login (contraseña ilegible). Los posts/comentarios se mantienen, mostrados como anónimos.
+     * Los archivos de avatar/portada se borran aparte (ver UserService); acá solo se limpian las claves.
+     */
+    public void anonymize() {
+        this.email = "deleted_" + id + "@deleted.invalid";
+        this.password = java.util.UUID.randomUUID().toString();
+        this.bio = null;
+        this.website = null;
+        this.phone = null;
+        this.instagram = null;
+        this.location = null;
+        this.avatarStorageKey = null;
+        this.avatarContentType = null;
+        this.coverStorageKey = null;
+        this.coverContentType = null;
+        this.deletedAt = Instant.now();
     }
 }

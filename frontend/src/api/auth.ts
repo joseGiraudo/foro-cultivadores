@@ -5,6 +5,7 @@ export interface RegisterRequest {
   username: string
   email: string
   password: string
+  acceptedTerms: boolean
 }
 
 // POST /auth/register → 201 con el perfil creado (role=USER, status=ACTIVE).

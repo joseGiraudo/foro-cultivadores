@@ -30,7 +30,7 @@ public record UserResponse(
                            Boolean followedByMe) {
         return new UserResponse(
                 user.getId(),
-                user.getUsername(),
+                user.displayUsername(),
                 includeEmail ? user.getEmail() : null,
                 user.getBio(),
                 user.getWebsite(),

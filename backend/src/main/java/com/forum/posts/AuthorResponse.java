@@ -7,6 +7,6 @@ import com.forum.users.User;
 record AuthorResponse(Long id, String username, Role role, String avatarUrl) {
 
     static AuthorResponse of(User user) {
-        return new AuthorResponse(user.getId(), user.getUsername(), user.getRole(), user.getAvatarUrl());
+        return new AuthorResponse(user.getId(), user.displayUsername(), user.getRole(), user.getAvatarUrl());
     }
 }

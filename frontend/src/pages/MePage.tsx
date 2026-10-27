@@ -13,7 +13,7 @@ import { isAtLeast } from '../lib/roles'
 import { useToast } from '../toast/useToast'
 
 export function MePage() {
-  const { user } = useAuth()
+  const { user, deleteAccount } = useAuth()
   const updateMe = useUpdateMe()
   const toast = useToast()
   const navigate = useNavigate()
@@ -64,6 +64,21 @@ export function MePage() {
       navigate(`/users/${user.username}`)
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'No se pudo guardar el perfil.')
+    }
+  }
+
+  async function handleDeleteAccount() {
+    const ok = window.confirm(
+      '¿Eliminar tu cuenta? Se anonimizan tus datos y no vas a poder volver a ingresar. ' +
+        'Tus posts y comentarios quedan como "[cuenta eliminada]". No se puede deshacer.',
+    )
+    if (!ok) return
+    try {
+      await deleteAccount()
+      toast.success('Tu cuenta fue eliminada.')
+      navigate('/', { replace: true })
+    } catch {
+      toast.error('No se pudo eliminar la cuenta. Intentá de nuevo.')
     }
   }
 
@@ -292,6 +307,22 @@ export function MePage() {
           </Link>
         </div>
       </form>
+
+      <section className="mt-10 rounded-xl border border-red-200 bg-red-50/40 p-4">
+        <h2 className="text-lg font-semibold text-ink">Eliminar mi cuenta</h2>
+        <p className="mt-1 text-sm text-ink-soft">
+          Se anonimizan tus datos personales (email, bio, imágenes) y no vas a poder volver a
+          ingresar. Tus publicaciones y comentarios quedan como “[cuenta eliminada]”. Esta acción no
+          se puede deshacer.
+        </p>
+        <button
+          type="button"
+          onClick={handleDeleteAccount}
+          className="mt-3 rounded-lg border border-red-300 px-4 py-2 text-sm font-semibold text-red-700 transition hover:bg-red-100"
+        >
+          Eliminar mi cuenta
+        </button>
+      </section>
     </div>
   )
 }
