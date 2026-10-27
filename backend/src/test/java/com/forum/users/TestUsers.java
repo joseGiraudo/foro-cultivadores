@@ -22,7 +22,8 @@ public class TestUsers {
     }
 
     public User create(String username, Role role, UserStatus status) {
-        return userRepository.save(new User(username, username + "@forum.test",
-                passwordEncoder.encode(PASSWORD), role, status));
+        User user = new User(username, username + "@forum.test", passwordEncoder.encode(PASSWORD), role, status);
+        user.markEmailVerified(); // los usuarios de test quedan verificados (pueden loguear)
+        return userRepository.save(user);
     }
 }

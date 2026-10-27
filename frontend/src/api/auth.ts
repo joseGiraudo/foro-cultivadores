@@ -28,3 +28,23 @@ export function logout(): Promise<void> {
 export function getMe(): Promise<UserResponse> {
   return api.get<UserResponse>('/users/me')
 }
+
+// POST /auth/verify-email → confirma el email con el token del link. 204 ok; 400 si inválido/vencido.
+export function verifyEmail(token: string): Promise<void> {
+  return api.post<void>('/auth/verify-email', { token })
+}
+
+// POST /auth/resend-verification → reenvía el email de verificación. 204 (respuesta genérica).
+export function resendVerification(email: string): Promise<void> {
+  return api.post<void>('/auth/resend-verification', { email })
+}
+
+// POST /auth/forgot-password → inicia la recuperación. 204 (respuesta genérica, no revela si existe).
+export function forgotPassword(email: string): Promise<void> {
+  return api.post<void>('/auth/forgot-password', { email })
+}
+
+// POST /auth/reset-password → cambia la contraseña con el token del link. 204 ok; 400 si inválido/vencido.
+export function resetPassword(token: string, password: string): Promise<void> {
+  return api.post<void>('/auth/reset-password', { token, password })
+}

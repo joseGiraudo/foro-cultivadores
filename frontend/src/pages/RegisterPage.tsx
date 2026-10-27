@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
+import { resendVerification } from '../api/auth'
 import { ApiError } from '../api/client'
 import { useAuth } from '../auth/useAuth'
 
@@ -23,7 +24,6 @@ function validate(username: string, email: string, password: string): Record<str
 
 export function RegisterPage() {
   const { register } = useAuth()
-  const navigate = useNavigate()
 
   const [username, setUsername] = useState('')
   const [email, setEmail] = useState('')
@@ -31,6 +31,8 @@ export function RegisterPage() {
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
   const [formError, setFormError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
+  // Email con el que se registró, para mostrar el aviso de verificación y permitir reenviar.
+  const [registeredEmail, setRegisteredEmail] = useState<string | null>(null)
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault()
@@ -45,7 +47,7 @@ export function RegisterPage() {
     setSubmitting(true)
     try {
       await register(username, email, password)
-      navigate('/', { replace: true })
+      setRegisteredEmail(email)
     } catch (err) {
       if (err instanceof ApiError) {
         if (err.status === 409) {
@@ -66,6 +68,34 @@ export function RegisterPage() {
   // Base `.input`; en error, las utilidades sueltas ganan (utilities > components en v4).
   const inputClass = (field: string) =>
     `input ${fieldErrors[field] ? 'border-red-400 focus:border-red-500' : ''}`
+
+  // Tras registrarse: aviso de verificación (no se inicia sesión hasta confirmar el email).
+  if (registeredEmail) {
+    return (
+      <div className="mx-auto max-w-sm">
+        <h1 className="mb-4 text-2xl font-semibold text-ink">Revisá tu email</h1>
+        <div className="rounded-lg border border-leaf-300 bg-leaf-100 p-4 text-sm text-ink-soft">
+          <p>
+            Te enviamos un email a <strong className="text-ink">{registeredEmail}</strong> para
+            verificar tu cuenta.
+          </p>
+          <p className="mt-2">Hacé clic en el enlace del email para activarla y poder ingresar.</p>
+        </div>
+        <button
+          type="button"
+          onClick={() => void resendVerification(registeredEmail).catch(() => undefined)}
+          className="btn-secondary mt-4 w-full"
+        >
+          Reenviar email
+        </button>
+        <p className="mt-4 text-center text-sm text-ink-soft">
+          <Link to="/login" className="font-semibold text-leaf-700 hover:underline">
+            Ir a ingresar
+          </Link>
+        </p>
+      </div>
+    )
+  }
 
   return (
     <div className="mx-auto max-w-sm">

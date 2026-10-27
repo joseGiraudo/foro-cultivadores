@@ -70,6 +70,10 @@ public class User {
     @Column(nullable = false, length = 20)
     private UserStatus status;
 
+    /** El email fue confirmado. Los nuevos registros arrancan en false y no pueden iniciar sesión. */
+    @Column(name = "email_verified", nullable = false)
+    private boolean emailVerified;
+
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 
@@ -202,5 +206,17 @@ public class User {
 
     public boolean isActive() {
         return status == UserStatus.ACTIVE;
+    }
+
+    public boolean isEmailVerified() {
+        return emailVerified;
+    }
+
+    public void markEmailVerified() {
+        this.emailVerified = true;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
     }
 }

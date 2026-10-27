@@ -7,6 +7,7 @@ import { ContributorRequestsPage } from './pages/ContributorRequestsPage'
 import { CreatePostPage } from './pages/CreatePostPage'
 import { EditPostPage } from './pages/EditPostPage'
 import { FollowListPage } from './pages/FollowListPage'
+import { ForgotPasswordPage } from './pages/ForgotPasswordPage'
 import { HomePage } from './pages/HomePage'
 import { LoginPage } from './pages/LoginPage'
 import { MePage } from './pages/MePage'
@@ -16,8 +17,10 @@ import { PlaceholderPage } from './pages/PlaceholderPage'
 import { PostDetailPage } from './pages/PostDetailPage'
 import { ProfilePage } from './pages/ProfilePage'
 import { RegisterPage } from './pages/RegisterPage'
+import { ResetPasswordPage } from './pages/ResetPasswordPage'
 import { SavedPostsPage } from './pages/SavedPostsPage'
 import { SearchPage } from './pages/SearchPage'
+import { VerifyEmailPage } from './pages/VerifyEmailPage'
 
 // Layout base + rutas. Las rutas placeholder se van completando por hito (ver docs/frontend-spec.md §6).
 export default function App() {
@@ -31,6 +34,9 @@ export default function App() {
           <Route path="/search" element={<SearchPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
+          <Route path="/verify-email" element={<VerifyEmailPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
           <Route
             path="/posts/new"
             element={

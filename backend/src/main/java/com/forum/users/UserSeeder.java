@@ -54,6 +54,7 @@ class UserSeeder implements ApplicationRunner {
     private void create(String username, String email, Role role, UserStatus status, String bio) {
         User user = new User(username, email, passwordEncoder.encode(DEFAULT_PASSWORD), role, status);
         user.setBio(bio);
+        user.markEmailVerified(); // los usuarios de ejemplo ya quedan verificados (pueden loguear)
         userRepository.save(user);
     }
 
@@ -67,6 +68,7 @@ class UserSeeder implements ApplicationRunner {
         user.setPhone(phone);
         user.setInstagram(instagram);
         user.setLocation(location);
+        user.markEmailVerified();
         userRepository.save(user);
     }
 }

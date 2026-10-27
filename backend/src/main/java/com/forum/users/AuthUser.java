@@ -21,17 +21,24 @@ public class AuthUser implements UserDetails {
     private final String password;
     private final Role role;
     private final UserStatus status;
+    private final boolean emailVerified;
 
-    public AuthUser(Long id, String username, String password, Role role, UserStatus status) {
+    public AuthUser(Long id, String username, String password, Role role, UserStatus status, boolean emailVerified) {
         this.id = id;
         this.username = username;
         this.password = password;
         this.role = role;
         this.status = status;
+        this.emailVerified = emailVerified;
     }
 
     static AuthUser from(User user) {
-        return new AuthUser(user.getId(), user.getUsername(), user.getPassword(), user.getRole(), user.getStatus());
+        return new AuthUser(user.getId(), user.getUsername(), user.getPassword(), user.getRole(),
+                user.getStatus(), user.isEmailVerified());
+    }
+
+    public boolean isEmailVerified() {
+        return emailVerified;
     }
 
     public Long getId() {

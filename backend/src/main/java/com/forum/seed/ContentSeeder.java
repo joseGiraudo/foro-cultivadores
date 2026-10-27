@@ -219,7 +219,8 @@ class ContentSeeder implements ApplicationRunner {
     }
 
     private AuthUser auth(User user) {
-        return new AuthUser(user.getId(), user.getUsername(), user.getPassword(), user.getRole(), user.getStatus());
+        return new AuthUser(user.getId(), user.getUsername(), user.getPassword(), user.getRole(),
+                user.getStatus(), user.isEmailVerified());
     }
 
     private byte[] readSampleImage() {

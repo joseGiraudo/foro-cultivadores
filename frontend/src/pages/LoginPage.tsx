@@ -16,17 +16,24 @@ export function LoginPage() {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
+  const [unverified, setUnverified] = useState(false)
   const [submitting, setSubmitting] = useState(false)
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault()
     setError(null)
+    setUnverified(false)
     setSubmitting(true)
     try {
       await login(username, password)
       navigate(from, { replace: true })
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'No se pudo ingresar. Intentá de nuevo.')
+      if (err instanceof ApiError) {
+        setError(err.message)
+        setUnverified(err.status === 403) // email sin verificar
+      } else {
+        setError('No se pudo ingresar. Intentá de nuevo.')
+      }
     } finally {
       setSubmitting(false)
     }
@@ -60,18 +67,32 @@ export function LoginPage() {
         </label>
 
         {error && <p className="text-sm text-red-700">{error}</p>}
+        {unverified && (
+          <p className="text-sm text-ink-soft">
+            <Link to="/verify-email" className="font-semibold text-leaf-700 hover:underline">
+              Reenviar email de verificación
+            </Link>
+          </p>
+        )}
 
         <button type="submit" disabled={submitting} className="btn-primary w-full">
           {submitting ? 'Ingresando…' : 'Ingresar'}
         </button>
       </form>
 
-      <p className="mt-4 text-sm text-ink-soft">
-        ¿No tenés cuenta?{' '}
-        <Link to="/register" className="font-semibold text-leaf-700 hover:underline">
-          Registrate
-        </Link>
-      </p>
+      <div className="mt-4 space-y-1 text-sm text-ink-soft">
+        <p>
+          <Link to="/forgot-password" className="font-semibold text-leaf-700 hover:underline">
+            ¿Olvidaste tu contraseña?
+          </Link>
+        </p>
+        <p>
+          ¿No tenés cuenta?{' '}
+          <Link to="/register" className="font-semibold text-leaf-700 hover:underline">
+            Registrate
+          </Link>
+        </p>
+      </div>
     </div>
   )
 }

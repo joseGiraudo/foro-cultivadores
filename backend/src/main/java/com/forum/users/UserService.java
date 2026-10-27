@@ -23,13 +23,15 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final FollowStats followStats;
     private final ForumPolicy policy;
+    private final AccountService accountService;
 
     UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, FollowStats followStats,
-                ForumPolicy policy) {
+                ForumPolicy policy, AccountService accountService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.followStats = followStats;
         this.policy = policy;
+        this.accountService = accountService;
     }
 
     @Transactional
@@ -47,6 +49,8 @@ public class UserService {
                 Role.USER,
                 UserStatus.ACTIVE);
         User saved = userRepository.save(user);
+        // El email arranca sin verificar: se manda el link de verificación (no puede loguear hasta confirmar).
+        accountService.sendVerificationEmail(saved);
         return UserResponse.of(saved, false, 0, 0, null);
     }
 

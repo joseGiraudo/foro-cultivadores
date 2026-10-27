@@ -61,10 +61,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  // Registra y, si sale bien, abre sesión con esas credenciales.
+  // Registra la cuenta. NO abre sesión: el usuario debe verificar su email antes de poder ingresar.
   async function register(username: string, email: string, password: string): Promise<void> {
     await registerRequest({ username, email, password })
-    await login(username, password)
   }
 
   async function logout(): Promise<void> {
