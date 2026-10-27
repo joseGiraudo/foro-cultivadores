@@ -11,6 +11,9 @@
   /* Neutros cálidos: crema / arena */
   --color-cream-50: #fbf8f1;
   --color-cream-100: #f5efe2;
+  /* Fondo de página: apenas más oscuro que cream-50 (pero aún más claro que cream-100, para que
+     las tarjetas se sigan distinguiendo del fondo). */
+  --color-page: #f9f4eb;
   --color-sand-200: #e9e0cd;
   --color-sand-300: #d9ccb2;
 
@@ -51,7 +54,7 @@
   }
 
   body {
-    background-color: var(--color-cream-50);
+    background-color: var(--color-page);
     color: var(--color-ink);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;

@@ -29,7 +29,6 @@ export function SearchPage() {
 
   return (
     <div>
-      <h1 className="mb-1 text-3xl font-semibold text-ink">Resultados</h1>
       <p className="mb-4 text-sm text-ink-soft">
         {data
           ? `${data.totalElements} resultado${data.totalElements === 1 ? '' : 's'} para `

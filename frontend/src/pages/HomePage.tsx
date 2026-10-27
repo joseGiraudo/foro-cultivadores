@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import type { PostType } from '../api/types'
 import { useAuth } from '../auth/useAuth'
@@ -40,6 +41,11 @@ export function HomePage() {
   // "Siguiendo" solo aplica con sesión (la pestaña se oculta deslogueado; esto lo refuerza).
   const following = feed === 'following' && !!user
   const hasActiveFilters = !!postType || categoryIds.length > 0
+
+  // En mobile los filtros arrancan ocultos detrás de sus botones "Tipo" / "Categorías".
+  const [typeOpen, setTypeOpen] = useState(false)
+  const [catsOpen, setCatsOpen] = useState(false)
+  const activeTypeLabel = TYPE_OPTIONS.find((o) => o.value === postType)?.label
 
   const { data, isLoading, isError, error, refetch } = usePosts({
     categoryIds,
@@ -86,7 +92,7 @@ export function HomePage() {
   }
 
   function tabClass(active: boolean) {
-    return `rounded-lg px-4 py-2 text-sm font-semibold transition ${
+    return `rounded-lg px-4 py-1.5 text-sm font-semibold transition ${
       active ? 'bg-leaf-600 text-cream-50 shadow-soft' : 'text-ink-soft hover:bg-cream-100 hover:text-ink'
     }`
   }
@@ -109,79 +115,154 @@ export function HomePage() {
 
   return (
     <div className="lg:grid lg:grid-cols-[13rem_minmax(0,1fr)_14rem] lg:gap-6">
-      {/* Sidebar izquierda: Categorías (solo escritorio) */}
+      {/* Sidebar izquierda: todos los filtros (Tipo arriba, Categorías abajo) — solo escritorio */}
       <aside className="hidden lg:block">
-        {categories && categories.length > 0 && (
-          <div className="sticky top-20">
-            <h2 className={sectionTitle}>Categorías</h2>
+        <div className="sticky top-20 space-y-4">
+          <div>
+            <h2 className={sectionTitle}>Tipo</h2>
             <nav className="flex flex-col gap-1">
-              <button type="button" onClick={clearCategories} className={sideItem(categoryIds.length === 0)}>
-                Todas
+              <button type="button" onClick={() => updateType(undefined)} className={sideItem(!postType)}>
+                Todos
               </button>
-              {categories.map((category) => (
+              {TYPE_OPTIONS.map((option) => (
                 <button
-                  key={category.id}
+                  key={option.value}
                   type="button"
-                  onClick={() => toggleCategory(category.id)}
-                  className={sideItem(categoryIds.includes(category.id))}
+                  onClick={() => updateType(postType === option.value ? undefined : option.value)}
+                  className={sideItem(postType === option.value, TYPE_ACTIVE[option.value])}
                 >
-                  {category.name}
+                  {option.label}
                 </button>
               ))}
             </nav>
           </div>
-        )}
+
+          {categories && categories.length > 0 && (
+            <div className="border-t border-sand-200 pt-4">
+              <h2 className={sectionTitle}>Categorías</h2>
+              <nav className="flex flex-col gap-1">
+                <button type="button" onClick={clearCategories} className={sideItem(categoryIds.length === 0)}>
+                  Todas
+                </button>
+                <div className="flex max-h-72 flex-col gap-1 overflow-y-auto pr-1">
+                  {categories.map((category) => {
+                    const active = categoryIds.includes(category.id)
+                    return (
+                      <button
+                        key={category.id}
+                        type="button"
+                        onClick={() => toggleCategory(category.id)}
+                        aria-pressed={active}
+                        className={sideItem(active)}
+                      >
+                        <span aria-hidden="true" className="mr-1.5 inline-block w-3 text-center">
+                          {active ? '✓' : ''}
+                        </span>
+                        {category.name}
+                      </button>
+                    )
+                  })}
+                </div>
+              </nav>
+            </div>
+          )}
+
+          {hasActiveFilters && (
+            <button type="button" onClick={clearAllFilters} className={`w-full ${clearButtonClass}`}>
+              Limpiar filtros
+            </button>
+          )}
+        </div>
       </aside>
 
       {/* Centro: feed */}
       <div className="min-w-0">
-        <h1 className="mb-4 text-3xl font-semibold text-ink">Publicaciones</h1>
-
         {user && (
-          <div className="mb-4 inline-flex gap-1 rounded-xl bg-sand-200 p-1">
-            <button type="button" className={tabClass(!following)} onClick={() => updateFeed('all')}>
-              Todo
-            </button>
-            <button type="button" className={tabClass(following)} onClick={() => updateFeed('following')}>
-              Siguiendo
-            </button>
+          <div className="mb-3 flex justify-center">
+            <div className="inline-flex gap-1 rounded-xl bg-sand-200 p-0.5">
+              <button type="button" className={tabClass(!following)} onClick={() => updateFeed('all')}>
+                Todo
+              </button>
+              <button type="button" className={tabClass(following)} onClick={() => updateFeed('following')}>
+                Siguiendo
+              </button>
+            </div>
           </div>
         )}
 
         {/* Filtros inline (solo mobile/tablet; en escritorio van a las sidebars) */}
         <div className="mb-5 space-y-3 lg:hidden">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="mr-1 text-sm font-semibold text-ink-soft">Tipo</span>
-            <FilterChip active={!postType} onClick={() => updateType(undefined)}>
-              Todos
-            </FilterChip>
-            {TYPE_OPTIONS.map((option) => (
-              <FilterChip
-                key={option.value}
-                active={postType === option.value}
-                activeClass={TYPE_ACTIVE[option.value]}
-                onClick={() => updateType(postType === option.value ? undefined : option.value)}
-              >
-                {option.label}
-              </FilterChip>
-            ))}
+          <div>
+            <button
+              type="button"
+              onClick={() => setTypeOpen((v) => !v)}
+              aria-expanded={typeOpen}
+              className="flex items-center gap-2 text-sm font-semibold text-ink-soft"
+            >
+              Tipo
+              {activeTypeLabel && (
+                <span className="rounded-full bg-leaf-600 px-1.5 py-0.5 text-xs font-semibold text-cream-50">
+                  {activeTypeLabel}
+                </span>
+              )}
+              <span aria-hidden="true" className="text-ink-faint">
+                {typeOpen ? '▴' : '▾'}
+              </span>
+            </button>
+
+            {typeOpen && (
+              <div className="mt-2 flex flex-wrap gap-2">
+                <FilterChip active={!postType} onClick={() => updateType(undefined)}>
+                  Todos
+                </FilterChip>
+                {TYPE_OPTIONS.map((option) => (
+                  <FilterChip
+                    key={option.value}
+                    active={postType === option.value}
+                    activeClass={TYPE_ACTIVE[option.value]}
+                    onClick={() => updateType(postType === option.value ? undefined : option.value)}
+                  >
+                    {option.label}
+                  </FilterChip>
+                ))}
+              </div>
+            )}
           </div>
 
           {categories && categories.length > 0 && (
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="mr-1 text-sm font-semibold text-ink-soft">Categorías</span>
-              <FilterChip active={categoryIds.length === 0} onClick={clearCategories}>
-                Todas
-              </FilterChip>
-              {categories.map((category) => (
-                <FilterChip
-                  key={category.id}
-                  active={categoryIds.includes(category.id)}
-                  onClick={() => toggleCategory(category.id)}
-                >
-                  {category.name}
-                </FilterChip>
-              ))}
+            <div className="border-t border-sand-200 pt-3">
+              <button
+                type="button"
+                onClick={() => setCatsOpen((v) => !v)}
+                aria-expanded={catsOpen}
+                className="flex items-center gap-2 text-sm font-semibold text-ink-soft"
+              >
+                Categorías
+                {categoryIds.length > 0 && (
+                  <span className="rounded-full bg-leaf-600 px-1.5 py-0.5 text-xs font-semibold text-cream-50">
+                    {categoryIds.length}
+                  </span>
+                )}
+                <span aria-hidden="true" className="text-ink-faint">
+                  {catsOpen ? '▴' : '▾'}
+                </span>
+              </button>
+
+              {catsOpen && (
+                <div className="mt-2 flex max-h-40 flex-wrap gap-2 overflow-y-auto pr-1">
+                  <FilterChip active={categoryIds.length === 0} onClick={clearCategories}>
+                    Todas
+                  </FilterChip>
+                  {categories.map((category) => {
+                    const active = categoryIds.includes(category.id)
+                    return (
+                      <FilterChip key={category.id} active={active} onClick={() => toggleCategory(category.id)}>
+                        {active ? `✓ ${category.name}` : category.name}
+                      </FilterChip>
+                    )
+                  })}
+                </div>
+              )}
             </div>
           )}
 
@@ -211,35 +292,8 @@ export function HomePage() {
         )}
       </div>
 
-      {/* Sidebar derecha: Tipo + limpiar (solo escritorio) */}
-      <aside className="hidden lg:block">
-        <div className="sticky top-20 space-y-4">
-          <div>
-            <h2 className={sectionTitle}>Tipo</h2>
-            <nav className="flex flex-col gap-1">
-              <button type="button" onClick={() => updateType(undefined)} className={sideItem(!postType)}>
-                Todos
-              </button>
-              {TYPE_OPTIONS.map((option) => (
-                <button
-                  key={option.value}
-                  type="button"
-                  onClick={() => updateType(postType === option.value ? undefined : option.value)}
-                  className={sideItem(postType === option.value, TYPE_ACTIVE[option.value])}
-                >
-                  {option.label}
-                </button>
-              ))}
-            </nav>
-          </div>
-
-          {hasActiveFilters && (
-            <button type="button" onClick={clearAllFilters} className={`w-full ${clearButtonClass}`}>
-              Limpiar filtros
-            </button>
-          )}
-        </div>
-      </aside>
+      {/* Sidebar derecha: reservada para contenido futuro (solo escritorio) */}
+      <aside className="hidden lg:block" aria-hidden="true" />
     </div>
   )
 }
