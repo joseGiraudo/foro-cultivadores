@@ -30,6 +30,11 @@ spring:
       max-request-size: 55MB
 
 server:
+  # Detrás de un reverse proxy (Caddy en prod), poné FORWARD_HEADERS_STRATEGY=framework para que el
+  # backend lea X-Forwarded-For/-Proto y vea la IP y el esquema (HTTPS) reales del cliente —clave para
+  # el rate-limit por IP y la detección de HTTPS—. Default 'none' (seguro en dev / sin proxy: evita que
+  # un cliente spoofee su IP vía X-Forwarded-For).
+  forward-headers-strategy: ${FORWARD_HEADERS_STRATEGY:none}
   servlet:
     session:
       timeout: 14d
