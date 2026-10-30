@@ -1,7 +1,13 @@
-# Decisiones técnicas
+# Decisiones
 
-> Registro de decisiones técnicas no cubiertas explícitamente por el spec.
-> Formato: fecha · decisión · motivo.
+Registro de decisiones del MVP: **técnicas** (cómo se implementó) y **de negocio** (cómo se
+interpretaron o extendieron las reglas del spec). Formato de las técnicas: fecha · decisión · motivo.
+
+> **Alcance:** esto cubre el **MVP** (sept 2026). Las decisiones de la etapa posterior (auth por
+> cookie, email/Resend, consentimiento legal, R2, hardening, bootstrap de prod) están documentadas en
+> [`produccion-pendientes.md`](produccion-pendientes.md).
+
+## Técnicas — backend
 
 - 2026-09-25 · Spring Boot 4.1.1 (última GA, sobre Spring Framework 7) con starters modulares (`spring-boot-starter-webmvc`, etc.) · El spec pide "última versión estable de Spring Boot".
 - 2026-09-25 · JDK: Temurin 21 ya instalado en la máquina (`~/.jdks/temurin-21.0.10`) · Cumple "Java 21 o superior (LTS)" sin instalar nada nuevo.
@@ -39,9 +45,54 @@
 - 2026-09-25 · Módulo `users` en un único paquete plano con la mayoría de los tipos package-private (repository, DTOs, controllers) · Cumple "lo que no necesita ser público va package-private" sin exponer internals.
 - 2026-09-25 · Errores de dominio mediante una única `ApiException` con factorías estáticas (`notFound`, `forbidden`, `conflict`, `badRequest`) traducida a `ProblemDetail` en un `@RestControllerAdvice` · Menos clases que una jerarquía de excepciones, extensible por hito.
 
-## Frontend
+## Técnicas — frontend
 
 - 2026-09-26 · Frontend (Hito 1) scaffoldeado con `create-vite` en `frontend/`: React 19, Vite 8, TypeScript 6, oxlint (no eslint) · Son las versiones que trae el scaffold moderno; el `frontend-spec.md` asumía React 18, pero se toma lo que da el generador para no quedar atrás.
 - 2026-09-26 · Tailwind CSS v4 vía plugin `@tailwindcss/vite` + `@import 'tailwindcss'` en `index.css`; sin `tailwind.config.js` ni `postcss.config.js` · v4 no los requiere por defecto; menos archivos de config.
 - 2026-09-26 · Proxy de Vite: `/api/*` → `http://localhost:8080/*` con `rewrite` que quita `/api` · El front usa rutas relativas `/api/...` y evita configurar CORS en el backend para el MVP.
-- 2026-09-26 · Cliente HTTP único (`src/api/client.ts`) con `setAuthHeaderProvider` para inyectar el header Basic desde el AuthContext (Hito 2) y `ApiError` que traduce `ProblemDetail` (status, detail, fieldErrors) · Aísla la auth (migrable a JWT tocando un solo archivo) y centraliza el manejo de errores.
+- 2026-09-26 · Cliente HTTP único (`src/api/client.ts`) que traduce `ProblemDetail` (status, detail, fieldErrors) a `ApiError` · Aísla la auth (migrable sin tocar las vistas) y centraliza el manejo de errores. (La auth pasó después de header Basic a cookie de sesión; ver `produccion-pendientes.md`.)
+
+## De negocio
+
+Decisiones sobre **reglas de negocio**: cómo se interpretaron o extendieron las reglas del spec.
+
+### Hito 2 — Usuarios y auth
+- **El email no se devuelve en la respuesta de `POST /auth/register`.** El spec dice "el email solo en `/users/me` y en endpoints de admin"; se aplica al pie de la letra. Quien se registra puede ver su email llamando a `GET /users/me`.
+- **Un admin no puede cambiar su propio `status` (ni suspenderse ni reactivarse): devuelve 409.** El spec solo prohíbe "suspenderse a sí mismo"; se extendió a cualquier cambio de estado propio por simplicidad y para evitar estados ambiguos. Si en el futuro se quiere permitir que un admin se reactive a sí mismo, revisar `UserService.changeStatus`.
+- **Un usuario suspendido tampoco puede ejecutar acciones de admin** (aunque tenga rol alto): la regla "cualquier escritura de un SUSPENDED devuelve 403" se aplica también a los endpoints de administración.
+
+### Hito 3 — Categorías y reglas
+- **La unicidad del nombre de categoría es case-insensitive.** El spec pide "name único"; se interpretó que "Interior" e "interior" son la misma categoría (evita duplicados por mayúsculas). Si se quisiera permitir nombres que solo difieren en mayúsculas, cambiar `CategoryRepository.existsByNameIgnoreCase`.
+
+### Hito 4 — Posts
+- **Un `categoryId` inexistente al crear/editar un post devuelve 400** (no 404). Se interpreta como un dato inválido dentro del payload, no como "el recurso post no existe". Ver `CategoryService.getEntitiesByIds`.
+- **Si un usuario no-moderador manda `?status=` en `GET /posts`, el parámetro se ignora** y solo ve posts `ACTIVE` (en vez de devolver 403/400). El spec marca ese filtro como "solo mods"; se optó por ignorarlo silenciosamente para no romper clientes. Ver `PostService.list`.
+- **`updatedAt` se actualiza también en los cambios de estado** (ocultar/eliminar/restaurar), no solo al editar título/contenido/categorías. Se consideró que un cambio de estado es una modificación del post. Si se quisiera reservar `updatedAt` solo para ediciones de contenido, revisar `Post.changeStatus`.
+
+### Hito 5 — Comentarios
+- **Comentar un post visible pero no ACTIVE devuelve 409** (caso de un moderador sobre un post `HIDDEN`); para un usuario común el post no es visible y devuelve 404. Solo se comenta en posts `ACTIVE`. Ver `CommentService.create`.
+- **Un `parentCommentId` inválido (inexistente, de otro post, o no ACTIVE) devuelve 400.** Es dato del payload; sigue la sección 6 del spec.
+- **La edición y el cambio de estado de un comentario son a nivel comentario** (`/comments/{id}`), sin volver a chequear la visibilidad del post: el autor/moderador puede gestionar el comentario aunque el post haya cambiado de estado. Si se quisiera acoplar a la visibilidad del post, revisar `CommentService.update`/`changeStatus`.
+
+### Hito 6 — Votos
+- **`commentCount` cuenta solo comentarios `ACTIVE`.** El spec no lo define; se optó por contar los comentarios activos (no los ocultos/eliminados). Si se quisiera contar todos, revisar `PostCommentStatsImpl` / `CommentRepository.countByPostIdsAndStatus`.
+- **Votar (PUT) un post/comentario visible pero no ACTIVE devuelve 409** (caso de un moderador sobre contenido `HIDDEN`); para un usuario común no es visible y devuelve 404. Solo se vota contenido `ACTIVE`.
+- **`DELETE .../vote` no valida rol ni existencia del contenido**: es idempotente (204 siempre) y solo requiere estar autenticado y no suspendido. Quitar el propio voto se considera limpieza, no una escritura sujeta a `*-vote-min-role`.
+
+### Hito 7 — Imágenes
+- **Una imagen WebP subida se guarda y se sirve como PNG** (se re-codifica para limpiar metadatos y no hay codificador WebP en Java puro). Es decir, se acepta el upload de WebP pero su `contentType` pasa a `image/png`. Ver `ImageProcessor`. Detalle técnico en la sección Técnicas.
+- **La subida/borrado de imágenes es solo del autor** (ni siquiera un moderador puede subir a un post ajeno), y solo si el post está `ACTIVE`. Post no visible → 404; post visible-pero-no-ACTIVE (moderador) → 409.
+- **`position` de las imágenes arranca en 0** (máximo actual + 1, con máximo inicial −1). La miniatura es la imagen de menor `position`.
+- **`sizeBytes` es el tamaño después de procesar** (re-codificado), no el del archivo subido, tal como indica el spec.
+
+### Hito 8 — Follows
+- **`followedByMe` es `null` para usuarios anónimos**; para un usuario autenticado es `true`/`false`. En el propio perfil (`/users/me`) queda `false` (no te seguís a vos mismo). Ver `UserService.toResponse`.
+- **Seguirse a uno mismo → 400**; seguir a un usuario con rol menor a `follow-target-min-role` → 400; seguir a un usuario inexistente → 404. `POST` es idempotente (204 aunque ya lo siga) y `DELETE` también (204 aunque no lo siga).
+- **Los contadores de follows en `UserResponse` cuentan todas las relaciones** (no dependen del estado del usuario seguido/seguidor). En el MVP no hay estado "borrado" de follows: se crean y se eliminan físicamente.
+
+## Preguntas abiertas
+
+Nada pendiente del MVP. Las funcionalidades que estaban "fuera del MVP" (búsqueda, feed de seguidos,
+notificaciones, cuentas de negocio, JWT, etc.) ya se fueron implementando en la etapa post-MVP; lo que
+falta para salir a producción está en [`produccion-pendientes.md`](produccion-pendientes.md) y las
+ideas de mejora en [`mejoras-futuras.md`](mejoras-futuras.md).

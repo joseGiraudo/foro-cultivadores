@@ -1,5 +1,11 @@
 # Foro de Cultivadores — Spec del MVP
 
+> ⚠️ **Documento histórico.** Es el spec original del MVP (sept 2026) y **no refleja el estado actual**
+> del proyecto: la auth pasó de HTTP Basic a cookie de sesión, y se sumaron muchas features post-MVP
+> (búsqueda, notificaciones, guardados, growshops, verificación de email, etc.). Para el estado actual
+> ver [`README.md`](README.md) y [`arquitectura.md`](arquitectura.md). Se conserva como referencia del
+> diseño base y del modelo de datos original.
+
 > Documento de referencia para desarrollar el MVP con Claude Code.
 > El diseño a largo plazo está en `forum-project-recap.md`. Este spec define **solo el MVP** y, si hay contradicciones con el recap, **manda este spec** (por ejemplo, `VERIFIED_USER` ya no existe).
 

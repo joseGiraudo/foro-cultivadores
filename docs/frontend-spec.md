@@ -1,5 +1,10 @@
 # Foro de Cultivadores — Spec del Frontend (MVP)
 
+> ⚠️ **Documento histórico.** Es el spec original del front del MVP (sept 2026) y **no refleja el estado
+> actual**: el scaffold real fue React 19 (no 18), y la auth pasó de HTTP Basic en sessionStorage a
+> cookie de sesión. Para el estado actual ver [`README.md`](README.md) y [`arquitectura.md`](arquitectura.md).
+> Se conserva como referencia del diseño base (pantallas, componentes, mapeo a endpoints).
+
 > Documento de referencia para desarrollar el **frontend del MVP** con Claude Code.
 > Nace de `ideas-frontend.md` (inventario) y se apoya en el backend ya terminado
 > (`mvp-spec.md`, `decisions.md`). Si hay contradicción con el backend, **manda el backend**:

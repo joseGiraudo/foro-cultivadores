@@ -62,8 +62,22 @@ Falta la **Fase D** (hardening de seguridad), el **deploy** y un par de **bloque
    `[localidad, Argentina]` en `TermsPage`/`PrivacyPage`. Idealmente revisión legal del texto
    (los borradores son plantilla).
 
-8. **Build y serving del frontend.** Hoy corre con `npm run dev` + proxy de Vite. En prod: compilar
-   el front y servirlo + reverse proxy de `/api` **al mismo origen** (clave para la cookie de sesión).
+8. **Artefactos de deploy (empaquetar + servir).** Hoy no existe ninguno: el back corre con
+   `spring-boot:run` y el front con `npm run dev` + proxy de Vite. Estos artefactos son del **camino
+   VPS + Caddy** (si se va a PaaS cambian). Faltan crear:
+   - **Dockerfile del backend** — multi-stage: etapa Maven (`mvnw package`) → etapa liviana con JRE 21
+     que corre el `.jar`.
+   - **Build del front + servido estático** — `npm run build` (`dist/`) servido por Caddy (Dockerfile
+     multi-stage node→caddy, o build afuera y montar el `dist/`).
+   - **Caddyfile** — HTTPS automático (Let's Encrypt), sirve el `dist/` del front y proxea `/api/*` →
+     `backend:8080` **quitando el prefijo `/api`** (igual que el proxy de Vite). Todo **mismo origen**
+     → la cookie `SameSite=Strict` funciona.
+   - **docker-compose de prod** — Postgres (con **volumen nombrado** para BD + imágenes si es disco
+     local) + backend (env vars de prod) + Caddy. Distinto del compose de dev (solo Postgres).
+   - **Backup** — cron de `pg_dump` + copia offsite (bucket/otro server).
+   - ✅ **Config de proxy ya lista**: `server.forward-headers-strategy` se activa con
+     `FORWARD_HEADERS_STRATEGY=framework` (ver tabla) para que detrás de Caddy el backend vea la IP
+     real (rate-limit) y el esquema HTTPS. Default `none` (dev/sin proxy).
 
 ---
 
@@ -121,6 +135,7 @@ La Fase D es **código y NO depende del hosting**, salvo el **captcha** (proveed
 |---|---|---|
 | `DB_URL`, `DB_USERNAME`, `DB_PASSWORD` | Conexión a Postgres | Sin defaults en prod |
 | `COOKIE_SECURE` | Cookie de sesión `Secure` | `true` (requiere HTTPS) |
+| `FORWARD_HEADERS_STRATEGY` | Leer IP/esquema reales detrás del proxy | `framework` en prod (detrás de Caddy); default `none` |
 | `FORUM_EMAIL_RESEND_API_KEY` | Activa Resend (si falta, loguea por consola) | Secreto |
 | `EMAIL_FROM` | Remitente de los emails | Dominio verificado en Resend |
 | `FRONTEND_BASE_URL` | Base para los links de los emails | URL real del front |
