@@ -7,6 +7,11 @@ target/
 ### Almacenamiento local de imágenes (uploads) ###
 data/
 
+### Config local con secretos (R2, etc.) — NO commitear ###
+application-local.yml
+application-local.yaml
+application-local.properties
+
 ### STS ###
 .apt_generated
 .classpath
