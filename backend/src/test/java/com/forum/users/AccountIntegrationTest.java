@@ -25,7 +25,7 @@ import com.forum.email.RecordingEmailSender;
 import tools.jackson.databind.ObjectMapper;
 
 /** Flujo de verificación de email y recuperación de contraseña (Fase B). */
-@SpringBootTest
+@SpringBootTest(properties = "forum.rate-limit.enabled=false") // repite POST /auth/* desde la misma IP
 @AutoConfigureMockMvc
 @Import({TestcontainersConfiguration.class, TestUsers.class, RecordingEmailSender.class})
 @Transactional

@@ -1,7 +1,5 @@
 package com.forum.categories;
 
-import java.util.List;
-
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.annotation.Profile;
@@ -18,12 +16,6 @@ import org.springframework.stereotype.Component;
 @Order(2)
 class CategorySeeder implements ApplicationRunner {
 
-    private static final List<String> NAMES = List.of(
-            "Interior", "Exterior", "Riego y nutrientes", "Plagas y enfermedades",
-            "Equipamiento", "Genéticas", "Germinación", "Floración", "Cosecha y curado",
-            "Iluminación", "Sustratos y macetas", "Cultivo orgánico", "Legales y normativa",
-            "Muestra tu cultivo");
-
     private final CategoryRepository categoryRepository;
 
     CategorySeeder(CategoryRepository categoryRepository) {
@@ -32,7 +24,7 @@ class CategorySeeder implements ApplicationRunner {
 
     @Override
     public void run(ApplicationArguments args) {
-        NAMES.stream()
+        DefaultCategories.NAMES.stream()
                 .filter(name -> !categoryRepository.existsByNameIgnoreCase(name))
                 .forEach(name -> categoryRepository.save(new Category(name, null)));
     }

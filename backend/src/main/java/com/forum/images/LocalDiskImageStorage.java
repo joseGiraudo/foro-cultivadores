@@ -8,7 +8,6 @@ import java.util.UUID;
 
 import org.springframework.core.io.PathResource;
 import org.springframework.core.io.Resource;
-import org.springframework.stereotype.Component;
 
 import com.forum.rules.ForumPolicy;
 import com.forum.shared.error.ApiException;
@@ -18,8 +17,8 @@ import jakarta.annotation.PostConstruct;
 /**
  * Almacenamiento de imágenes en disco local. El nombre del archivo se genera (UUID + extensión);
  * nunca se usa el nombre enviado por el cliente. El directorio base se crea y valida al arrancar.
+ * Se instancia en {@link ImageStorageConfig} cuando R2 no está activado (default dev/tests).
  */
-@Component
 class LocalDiskImageStorage implements ImageStorage {
 
     private final Path basePath;

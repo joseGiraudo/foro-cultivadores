@@ -40,7 +40,12 @@ server:
         secure: ${COOKIE_SECURE:false}
 
 springdoc:
+  # En prod poné SPRINGDOC_ENABLED=false para no exponer el mapa de la API (rutas, DTOs).
+  # Default true por comodidad de dev (el proyecto se prueba desde Swagger).
+  api-docs:
+    enabled: ${SPRINGDOC_ENABLED:true}
   swagger-ui:
+    enabled: ${SPRINGDOC_ENABLED:true}
     path: /swagger-ui.html
 
 # Reglas de negocio configurables. Los services consultan ForumPolicy; ningún rol mínimo se
@@ -64,13 +69,38 @@ forum:
     moderation-min-role: MODERATOR
     business-profile-min-role: CONTRIBUTOR   # quién puede completar datos de comercio (web, wsp, IG, ubicación)
     cover-image-min-role: CONTRIBUTOR        # quién puede subir foto de portada en su perfil
+  # Rate-limiting in-memory de los endpoints de /auth (login, registro, olvido/reset de contraseña,
+  # reenvío de verificación): hasta max-attempts por IP y por endpoint cada window-seconds → 429.
+  # Frena fuerza bruta y abuso de emails. Se puede apagar con FORUM_RATE_LIMIT_ENABLED=false.
+  rate-limit:
+    enabled: ${FORUM_RATE_LIMIT_ENABLED:true}
+    max-attempts: 10
+    window-seconds: 60
   images:
     max-per-post: 10
     max-file-size: 5MB
     allowed-types: [image/jpeg, image/png, image/webp]
+  # Arranque de producción (primer deploy). Los seeders de ejemplo son solo perfil dev, así que en
+  # prod la base arrancaría sin categorías (nadie podría publicar) ni ADMIN (nadie podría crear
+  # categorías ni promover). Con enabled=true, al iniciar se siembran las categorías base y se crea
+  # el primer ADMIN si no hay ninguno. Es idempotente; conviene apagarlo (false) una vez bootstrapeado.
+  bootstrap:
+    enabled: ${FORUM_BOOTSTRAP_ENABLED:false}
+    admin-username: ${BOOTSTRAP_ADMIN_USERNAME:}
+    admin-email: ${BOOTSTRAP_ADMIN_EMAIL:}
+    admin-password: ${BOOTSTRAP_ADMIN_PASSWORD:}
   storage:
     local:
       base-path: ./data/uploads
+    # Cloudflare R2 (S3-compatible). Con R2_ENABLED=true las imágenes van a R2 en vez del disco local
+    # (recomendado en prod: desacopla el storage del hosting). En dev/local queda apagado → disco.
+    r2:
+      enabled: ${R2_ENABLED:false}
+      endpoint: ${R2_ENDPOINT:}          # https://<account-id>.r2.cloudflarestorage.com
+      bucket: ${R2_BUCKET:}
+      access-key: ${R2_ACCESS_KEY:}
+      secret-key: ${R2_SECRET_KEY:}
+      region: ${R2_REGION:auto}
   email:
     from: ${EMAIL_FROM:Foro de Cultivadores <onboarding@resend.dev>}
     frontend-base-url: ${FRONTEND_BASE_URL:http://localhost:5173}

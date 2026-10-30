@@ -12,6 +12,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter.ReferrerPolicy;
 
 import tools.jackson.databind.ObjectMapper;
 
@@ -78,7 +79,17 @@ class SecurityConfig {
                         .anyRequest().authenticated())
                 .exceptionHandling(ex -> ex
                         .authenticationEntryPoint(entryPoint)
-                        .accessDeniedHandler(accessDeniedHandler));
+                        .accessDeniedHandler(accessDeniedHandler))
+                .headers(headers -> headers
+                        // HSTS: forzar HTTPS en el navegador. Solo se emite sobre conexiones seguras,
+                        // así que en dev (http local) no aparece; en prod (HTTPS) sí.
+                        .httpStrictTransportSecurity(hsts -> hsts
+                                .includeSubDomains(true)
+                                .maxAgeInSeconds(31536000)) // 1 año
+                        .referrerPolicy(ref -> ref.policy(ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN))
+                        // Anti-clickjacking moderno (X-Frame-Options: DENY ya va por defecto). El CSP
+                        // completo (default-src, etc.) corresponde al front que sirve HTML, no a esta API JSON.
+                        .contentSecurityPolicy(csp -> csp.policyDirectives("frame-ancestors 'none'")));
 
         // Solo para tests de integración (autentican vía Basic). En prod queda apagado.
         if (httpBasicEnabled) {

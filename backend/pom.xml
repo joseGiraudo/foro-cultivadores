@@ -28,7 +28,22 @@
 	</scm>
 	<properties>
 		<java.version>21</java.version>
+		<aws-sdk.version>2.29.0</aws-sdk.version>
 	</properties>
+
+	<dependencyManagement>
+		<dependencies>
+			<!-- BOM del AWS SDK v2 (S3). R2 de Cloudflare es S3-compatible. -->
+			<dependency>
+				<groupId>software.amazon.awssdk</groupId>
+				<artifactId>bom</artifactId>
+				<version>${aws-sdk.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+
 	<dependencies>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -64,6 +79,11 @@
 		<dependency>
 			<groupId>org.flywaydb</groupId>
 			<artifactId>flyway-database-postgresql</artifactId>
+		</dependency>
+		<!-- Cliente S3 para almacenar imágenes en Cloudflare R2 (opcional; en dev se usa disco local). -->
+		<dependency>
+			<groupId>software.amazon.awssdk</groupId>
+			<artifactId>s3</artifactId>
 		</dependency>
 
 		<dependency>

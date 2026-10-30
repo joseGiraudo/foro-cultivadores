@@ -55,5 +55,8 @@ public abstract class IntegrationTestSupport {
         registry.add("forum.storage.local.base-path", uploads::toString);
         // En prod la auth es por cookie de sesión; los tests de integración autentican por HTTP Basic.
         registry.add("forum.security.http-basic-enabled", () -> "true");
+        // Apagamos el rate-limiting: los tests repiten logins/registros desde la misma IP y
+        // toparían el límite. Hay un test dedicado (RateLimitIntegrationTest) que lo prueba encendido.
+        registry.add("forum.rate-limit.enabled", () -> "false");
     }
 }
